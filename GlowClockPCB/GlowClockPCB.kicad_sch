@@ -6896,6 +6896,71 @@
 		)
 		(uuid "ff399739-d1c6-48f7-bc58-926bd9fcd4d4")
 	)
+	(text "1.0"
+		(exclude_from_sim no)
+		(at 270.002 193.294 0)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+		)
+		(uuid "0d2d30f7-2add-4486-9063-91fc1843d9a3")
+	)
+	(text "Glow Clock"
+		(exclude_from_sim no)
+		(at 197.612 189.738 0)
+		(effects
+			(font
+				(size 2.54 2.54)
+				(thickness 0.508)
+				(bold yes)
+			)
+		)
+		(uuid "3004e1e4-e6ed-45f9-9084-c44061bd6e03")
+	)
+	(text "Author: "
+		(exclude_from_sim no)
+		(at 228.346 189.738 0)
+		(effects
+			(font
+				(size 2.54 2.54)
+				(color 132 0 0 1)
+			)
+		)
+		(uuid "916d656d-af7b-4204-ae43-18b6531673b4")
+	)
+	(text "Patrick Leiser"
+		(exclude_from_sim no)
+		(at 250.698 189.738 0)
+		(effects
+			(font
+				(size 2.54 2.54)
+			)
+		)
+		(uuid "9763d0ad-fad2-40c5-a799-aab6bd72a9b9")
+	)
+	(text "Sierra College Robotics Club"
+		(exclude_from_sim no)
+		(at 231.902 196.596 0)
+		(effects
+			(font
+				(size 1.5 1.5)
+				(thickness 0.254)
+				(bold yes)
+			)
+		)
+		(uuid "a0e4080f-1ca7-4fdc-88d2-0ad10584f013")
+	)
+	(text "2024-10-25"
+		(exclude_from_sim no)
+		(at 213.106 193.548 0)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+		)
+		(uuid "da46e5b4-2f6b-4b49-90dc-002fea0e9f0f")
+	)
 	(global_label "step1_fault"
 		(shape input)
 		(at 175.26 62.23 0)
@@ -8061,10 +8126,10 @@
 			)
 		)
 		(pin "1"
-			(uuid "d130dfa7-c033-4bea-a43a-d94b089d3c2b")
+			(uuid "d130dfa7-c033-4bea-a43a-d94b089d3c2c")
 		)
 		(pin "2"
-			(uuid "719491c4-fc5d-4839-8bb1-c7458489b647")
+			(uuid "719491c4-fc5d-4839-8bb1-c7458489b648")
 		)
 		(instances
 			(project ""
@@ -8201,10 +8266,10 @@
 			)
 		)
 		(pin "1"
-			(uuid "d130dfa7-c033-4bea-a43a-d94b089d3c2b")
+			(uuid "d130dfa7-c033-4bea-a43a-d94b089d3c2d")
 		)
 		(pin "2"
-			(uuid "719491c4-fc5d-4839-8bb1-c7458489b647")
+			(uuid "719491c4-fc5d-4839-8bb1-c7458489b649")
 		)
 		(instances
 			(project ""
@@ -9223,10 +9288,10 @@
 			)
 		)
 		(pin "1"
-			(uuid "d130dfa7-c033-4bea-a43a-d94b089d3c2b")
+			(uuid "d130dfa7-c033-4bea-a43a-d94b089d3c2e")
 		)
 		(pin "2"
-			(uuid "719491c4-fc5d-4839-8bb1-c7458489b647")
+			(uuid "719491c4-fc5d-4839-8bb1-c7458489b64a")
 		)
 		(instances
 			(project ""
@@ -10482,10 +10547,10 @@
 			)
 		)
 		(pin "1"
-			(uuid "d130dfa7-c033-4bea-a43a-d94b089d3c2b")
+			(uuid "d130dfa7-c033-4bea-a43a-d94b089d3c2f")
 		)
 		(pin "2"
-			(uuid "719491c4-fc5d-4839-8bb1-c7458489b647")
+			(uuid "719491c4-fc5d-4839-8bb1-c7458489b64b")
 		)
 		(instances
 			(project ""
@@ -11628,7 +11693,7 @@
 			)
 		)
 		(pin "1"
-			(uuid "9c92db34-b642-4d58-95b4-4eee5d72ab61")
+			(uuid "9c92db34-b642-4d58-95b4-4eee5d72ab62")
 		)
 		(instances
 			(project ""
@@ -13806,7 +13871,7 @@
 			)
 		)
 		(pin "1"
-			(uuid "bb215b28-d263-444a-9c73-eac853ad3829")
+			(uuid "bb215b28-d263-444a-9c73-eac853ad382a")
 		)
 		(instances
 			(project ""
