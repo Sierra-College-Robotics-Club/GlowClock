@@ -22,7 +22,7 @@ uv_pixels.auto_write = False
 
 #constants: 
 #dimensions of virtual and physical displays
-bufW = 320
+bufW = 180
 bufH = 60    #180 = LCM of 90 and 60
 
 colorW = bufW
@@ -50,8 +50,13 @@ print(gc.mem_free())
 #fbuf2 = adafruit_framebuf.FrameBuffer(bytearray(round(bufW*bufH/4)), bufW, bufH, adafruit_framebuf.GS2_HMSB)
 #print(gc.mem_free())
 # 
-# fbuf.pixel(5,18,maxColor)
-# fbuf.pixel(5,19,maxColor)
+fbuf.pixel(1,35,maxColor)
+fbuf.pixel(5,35,maxColor)
+fbuf.pixel(10,35,maxColor)
+fbuf.pixel(15,35,maxColor)
+fbuf.pixel(15,34,maxColor)
+fbuf.pixel(15,33,maxColor)
+
 # fbuf.pixel(5,20,maxColor)
 # fbuf.pixel(5,21,maxColor)
 # fbuf.pixel(5,22,maxColor-1)
@@ -66,7 +71,9 @@ print(gc.mem_free())
 # fbuf.pixel(6,24,maxColor-1)
 #fbuf.fill(maxColor)
 #fbuf.rect(10, 10, 45, 45, maxColor, fill=True)
-fbuf.text("Robotics Club!",3,40,maxColor)
+fbuf.text("Sierra College",20,35,maxColor)
+fbuf.text("Robotics Club!",20,45,maxColor)
+#fbuf.hline(0,1,35, maxColor)
 
 
 
