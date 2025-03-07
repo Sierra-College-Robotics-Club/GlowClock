@@ -13,7 +13,9 @@ uv_pixels = neopixel.NeoPixel(board.GP7, num_pixels)
 
 #print(pixels.brightness)
 pixels.brightness = 1
+pixels.auto_write = False
 uv_pixels.brightness = 1.0
+uv_pixels.auto_write = False
 
 
 
@@ -38,5 +40,8 @@ while(True):
     pixels[i-3] = (0,0,255)
     pixels[i-4] = (0,0,0)
     uv_pixels[uv_i+2] = (0,0,0)
+    time.sleep(0.2)
+    pixels.show()
+    uv_pixels.show()
 
 
