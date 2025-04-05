@@ -22,14 +22,16 @@ uv_pixels = neopixel.NeoPixel(board.GP7, num_pixels)
 #print(pixels.brightness)
 pixels.brightness = 0.45
 pixels.auto_write = False
-uv_pixels.brightness = 0.79
+uv_pixels.brightness = 1.0
 uv_pixels.auto_write = False
 
 
 
 #constants: 
 #dimensions of virtual and physical displays
-bufW = 180
+travelSteps = 4250
+stepsPerPixel = 50
+bufW = int(travelSteps/stepsPerPixel)+1 #86
 bufH = 60    #180 = LCM of 90 and 60
 
 colorW = bufW
@@ -80,7 +82,7 @@ print(gc.mem_free())
 #fbuf.fill(maxColor)
 #fbuf.rect(10, 10, 45, 45, maxColor, fill=True)
 fbuf.text("Sierra College",2,1,maxColor)
-fbuf.text("Robotics Club!",2,10,maxColor)
+fbuf.text("Robotics Club!",2,10,maxColor-2)
 #fbuf.hline(0,1,35, maxColor)
 
 def stepMotor(numsteps, direction):
@@ -116,7 +118,7 @@ def setPixelColumn(pixelString,physWidth, physHeight, colX):
 
 
 while(True):
-    for i in range (0, bufW-1):
+    for i in range (1, bufW-1):
          setPixelColumn(pixels, colorW, colorH, i)
          setPixelColumn(uv_pixels, uvW, uvH, i)
          print("x:")
@@ -124,15 +126,15 @@ while(True):
          print(uv_pixels)
          pixels.show()
          uv_pixels.show()
-         stepMotor(50, 1) #spends ~25ms moving 50 steps
-    for i in range (bufW-1, 0, -1):
+         stepMotor(stepsPerPixel, 1) #spends ~25ms moving 50 steps
+    for i in range (bufW-2, 0, -1):
          setPixelColumn(pixels, colorW, colorH, i)
          setPixelColumn(uv_pixels, uvW, uvH, i)
          print(uv_pixels)
          pixels.show()
          uv_pixels.show()
-         stepMotor(50, 0) #spends ~25ms moving 50 steps
-         #time.sleep(0.05)
+         stepMotor(stepsPerPixel, 0) #spends ~25ms moving 50 steps
+
 
 
 
