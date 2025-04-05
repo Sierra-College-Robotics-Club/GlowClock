@@ -4,10 +4,17 @@ import board
 import neopixel
 import gc
 import adafruit_framebuf
+import digitalio
 
+#stepper motor pins
+stepPin = digitalio.DigitalInOut(board.GP19)
+stepPin.direction = digitalio.Direction.OUTPUT
+dirPin = digitalio.DigitalInOut(board.GP18)
+dirPin.direction = digitalio.Direction.OUTPUT
 
+#neopixel pins
 num_pixels = 90
-num_uv_pixels = 60
+num_uv_pixels = 25
 
 pixels = neopixel.NeoPixel(board.GP6, num_pixels)
 uv_pixels = neopixel.NeoPixel(board.GP7, num_pixels)
@@ -49,13 +56,14 @@ print(gc.mem_free())
 #optional, for double-buffered frames
 #fbuf2 = adafruit_framebuf.FrameBuffer(bytearray(round(bufW*bufH/4)), bufW, bufH, adafruit_framebuf.GS2_HMSB)
 #print(gc.mem_free())
-# 
-fbuf.pixel(1,35,maxColor)
-fbuf.pixel(5,35,maxColor)
-fbuf.pixel(10,35,maxColor)
-fbuf.pixel(15,35,maxColor)
-fbuf.pixel(15,34,maxColor)
-fbuf.pixel(15,33,maxColor)
+
+#    pixel(x, y, color)
+#fbuf.pixel(1,35,maxColor)
+#fbuf.pixel(5,35,maxColor)
+#fbuf.pixel(10,35,maxColor)
+#fbuf.pixel(15,35,maxColor)
+#fbuf.pixel(15,34,maxColor)
+#fbuf.pixel(15,33,maxColor)
 
 # fbuf.pixel(5,20,maxColor)
 # fbuf.pixel(5,21,maxColor)
@@ -71,10 +79,17 @@ fbuf.pixel(15,33,maxColor)
 # fbuf.pixel(6,24,maxColor-1)
 #fbuf.fill(maxColor)
 #fbuf.rect(10, 10, 45, 45, maxColor, fill=True)
-fbuf.text("Sierra College",20,35,maxColor)
-fbuf.text("Robotics Club!",20,45,maxColor)
+fbuf.text("Sierra College",2,1,maxColor)
+fbuf.text("Robotics Club!",2,10,maxColor)
 #fbuf.hline(0,1,35, maxColor)
 
+def stepMotor(numsteps, direction):
+    dirPin.value = direction
+    for i in range(numsteps):
+        stepPin.value=1
+        time.sleep(.0006)
+        stepPin.value=0
+        time.sleep(.0006)
 
 
 def getPixelColumn(physWidth, physHeight, colX):
@@ -91,24 +106,34 @@ def getPixelColumn(physWidth, physHeight, colX):
         colVals.append(fbuf.pixel(bufX,bufY))
         #optional TODO: get average of virtual pixels in range, rather than corner of range
     return colVals
-# 
+
 def setPixelColumn(pixelString,physWidth, physHeight, colX):
     pixelArr = getPixelColumn(physWidth, physHeight, colX)
     for i, pixelVal in enumerate(pixelArr):
         pixelVal = int(pixelVal * (255 / maxColor))
         #print(pixelVal)
         pixelString[i]=(pixelVal,pixelVal,pixelVal)
-        
+
 
 while(True):
-     for i in range (0, bufW-1):
+    for i in range (0, bufW-1):
+         setPixelColumn(pixels, colorW, colorH, i)
+         setPixelColumn(uv_pixels, uvW, uvH, i)
+         print("x:")
+         print(i)
+         print(uv_pixels)
+         pixels.show()
+         uv_pixels.show()
+         stepMotor(50, 1) #spends ~25ms moving 50 steps
+    for i in range (bufW-1, 0, -1):
          setPixelColumn(pixels, colorW, colorH, i)
          setPixelColumn(uv_pixels, uvW, uvH, i)
          print(uv_pixels)
          pixels.show()
          uv_pixels.show()
-         time.sleep(0.05)
-         
+         stepMotor(50, 0) #spends ~25ms moving 50 steps
+         #time.sleep(0.05)
+
 
 
 #pixels = getPixelColumn(colorW, colorH, 5)
