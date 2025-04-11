@@ -1,4 +1,6 @@
-# Simple test for NeoPixels on Raspberry Pi
+# Main software for Sierra College Robotics Club Glow Clock
+# designed by Patrick Leiser
+# Tested with CircuitPython 9.2.x
 import time
 import board
 import neopixel
@@ -6,11 +8,24 @@ import gc
 import adafruit_framebuf
 import digitalio
 
+
+#CONNECTION LAYOUT:
+#LED_OUT_1: Color LEDs
+#LED_OUT_2: UV LEDs
+#LED_OUT_3: Reserved for future use, likely for staggered UV LED row
+#LED_OUT_4: Homing sensor
+
+
 #stepper motor pins
 stepPin = digitalio.DigitalInOut(board.GP19)
 stepPin.direction = digitalio.Direction.OUTPUT
 dirPin = digitalio.DigitalInOut(board.GP18)
 dirPin.direction = digitalio.Direction.OUTPUT
+
+#home sensor pin, uses LED_OUT_4 port
+homeSensorPin = digitalio.DigitalInOut(board.GP9)
+homeSensorPin.direction = digitalio.Direction.INPUT
+homeSensorPin.pull = digitalio.Pull.DOWN
 
 #neopixel pins
 num_pixels = 90
@@ -29,9 +44,9 @@ uv_pixels.auto_write = False
 
 #constants: 
 #dimensions of virtual and physical displays
-travelSteps = 4250
+travelSteps = 4350
 stepsPerPixel = 50
-bufW = int(travelSteps/stepsPerPixel)+1 #86
+bufW = int(travelSteps/stepsPerPixel)+1 #88
 bufH = 60    #180 = LCM of 90 and 60
 
 colorW = bufW
@@ -81,17 +96,20 @@ print(gc.mem_free())
 # fbuf.pixel(6,24,maxColor-1)
 #fbuf.fill(maxColor)
 #fbuf.rect(10, 10, 45, 45, maxColor, fill=True)
-fbuf.text("Sierra College",2,1,maxColor)
-fbuf.text("Robotics Club!",2,10,maxColor)
+
 #fbuf.hline(0,1,35, maxColor)
 
 def stepMotor(numsteps, direction):
     dirPin.value = direction
     for i in range(numsteps):
+        if(homeSensorPin.value == 0 and direction == 1):
+            stepPin.value = 0
+            return False
         stepPin.value=1
         time.sleep(.0006)
         stepPin.value=0
         time.sleep(.0006)
+    return True
 
 
 def getPixelColumn(physWidth, physHeight, colX):
@@ -116,9 +134,28 @@ def setPixelColumn(pixelString,physWidth, physHeight, colX):
         #print(pixelVal)
         pixelString[i]=(pixelVal,pixelVal,pixelVal)
 
+def homeRoutine():
+    for i in range (1, bufW+10):
+        uv_pixels[ i % num_uv_pixels ] = (255, 255, 255)
+        uv_pixels[ (i-1) % num_uv_pixels ] = (0,0,0)
+        uv_pixels.show()
+        stepMotor(stepsPerPixel, 1)
+    stepMotor(stepsPerPixel, 0) #back off one step
 
-while(True):
-    for i in range (1, bufW-1):
+
+def clearDisplay():
+    fillDisplay(0)
+
+def fillDisplay(newColor):
+    fbuf.fill(newColor)
+
+
+def renderLogo():
+    fbuf.text("Sierra College",2,1,maxColor)
+    fbuf.text("Robotics Club!",2,10,maxColor)
+
+def drawBufferForwards():
+     for i in range (1, bufW-1):
          setPixelColumn(pixels, colorW, colorH, i)
          setPixelColumn(uv_pixels, uvW, uvH, i)
          print("x:")
@@ -127,6 +164,8 @@ while(True):
          pixels.show()
          uv_pixels.show()
          stepMotor(stepsPerPixel, 1) #spends ~25ms moving 50 steps
+
+def drawBufferBackwards():
     for i in range (bufW-2, 0, -1):
          setPixelColumn(pixels, colorW, colorH, i)
          setPixelColumn(uv_pixels, uvW, uvH, i)
@@ -135,8 +174,15 @@ while(True):
          uv_pixels.show()
          stepMotor(stepsPerPixel, 0) #spends ~25ms moving 50 steps
 
+def mainLoop():
+    while(True):
+        #render backwards first after homing
+        drawBufferBackwards()
+        drawBufferForwards()
 
-
+homeRoutine()
+renderLogo()
+mainLoop()
 
 #pixels = getPixelColumn(colorW, colorH, 5)
 #pixels.show()
