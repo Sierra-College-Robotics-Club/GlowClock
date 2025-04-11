@@ -42,7 +42,7 @@ uvH = 60
 
 pixelDepth = 2;
 frameBuf_pixelDepth = adafruit_framebuf.GS2_HMSB
-maxColor = (2**pixelDepth)-1;
+maxColor = (2**pixelDepth)-1; #2 bits per pixel, values 0-3
 
 #calculated constants
 #colorHDiv = bufH / colorH
@@ -82,7 +82,7 @@ print(gc.mem_free())
 #fbuf.fill(maxColor)
 #fbuf.rect(10, 10, 45, 45, maxColor, fill=True)
 fbuf.text("Sierra College",2,1,maxColor)
-fbuf.text("Robotics Club!",2,10,maxColor-2)
+fbuf.text("Robotics Club!",2,10,maxColor)
 #fbuf.hline(0,1,35, maxColor)
 
 def stepMotor(numsteps, direction):
