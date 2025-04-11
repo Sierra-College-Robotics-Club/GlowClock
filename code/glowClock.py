@@ -7,6 +7,7 @@ import neopixel
 import gc
 import adafruit_framebuf
 import digitalio
+import asyncio
 
 
 #CONNECTION LAYOUT:
@@ -29,7 +30,7 @@ homeSensorPin.pull = digitalio.Pull.DOWN
 
 #neopixel pins
 num_pixels = 90
-num_uv_pixels = 25
+num_uv_pixels = 30
 
 pixels = neopixel.NeoPixel(board.GP6, num_pixels)
 uv_pixels = neopixel.NeoPixel(board.GP7, num_pixels)
@@ -99,16 +100,16 @@ print(gc.mem_free())
 
 #fbuf.hline(0,1,35, maxColor)
 
-def stepMotor(numsteps, direction):
+async def stepMotor(numsteps, direction):
     dirPin.value = direction
     for i in range(numsteps):
         if(homeSensorPin.value == 0 and direction == 1):
             stepPin.value = 0
             return False
         stepPin.value=1
-        time.sleep(.0006)
+        await asyncio.sleep(.0006)
         stepPin.value=0
-        time.sleep(.0006)
+        await asyncio.sleep(.0006)
     return True
 
 
@@ -134,13 +135,13 @@ def setPixelColumn(pixelString,physWidth, physHeight, colX):
         #print(pixelVal)
         pixelString[i]=(pixelVal,pixelVal,pixelVal)
 
-def homeRoutine():
+async def homeRoutine():
     for i in range (1, bufW+10):
         uv_pixels[ i % num_uv_pixels ] = (255, 255, 255)
         uv_pixels[ (i-1) % num_uv_pixels ] = (0,0,0)
         uv_pixels.show()
-        stepMotor(stepsPerPixel, 1)
-    stepMotor(stepsPerPixel, 0) #back off one step
+        await stepMotor(stepsPerPixel*50, 1)
+    await stepMotor(stepsPerPixel, 0) #back off one step
 
 
 def clearDisplay():
@@ -154,7 +155,7 @@ def renderLogo():
     fbuf.text("Sierra College",2,1,maxColor)
     fbuf.text("Robotics Club!",2,10,maxColor)
 
-def drawBufferForwards():
+async def drawBufferForwards():
      for i in range (1, bufW-1):
          setPixelColumn(pixels, colorW, colorH, i)
          setPixelColumn(uv_pixels, uvW, uvH, i)
@@ -163,26 +164,29 @@ def drawBufferForwards():
          print(uv_pixels)
          pixels.show()
          uv_pixels.show()
-         stepMotor(stepsPerPixel, 1) #spends ~25ms moving 50 steps
+         await stepMotor(stepsPerPixel, 1) #spends ~25ms moving 50 steps
 
-def drawBufferBackwards():
+async def drawBufferBackwards():
     for i in range (bufW-2, 0, -1):
          setPixelColumn(pixels, colorW, colorH, i)
          setPixelColumn(uv_pixels, uvW, uvH, i)
          print(uv_pixels)
          pixels.show()
          uv_pixels.show()
-         stepMotor(stepsPerPixel, 0) #spends ~25ms moving 50 steps
+         await stepMotor(stepsPerPixel, 0) #spends ~25ms moving 50 steps
 
-def mainLoop():
+async def mainLoop():
     while(True):
         #render backwards first after homing
-        drawBufferBackwards()
-        drawBufferForwards()
+        await drawBufferBackwards()
+        await drawBufferForwards()
 
-homeRoutine()
-renderLogo()
-mainLoop()
+async def main(): 
+    await homeRoutine()
+    renderLogo()
+    await mainLoop()
+    
+asyncio.run(main())
 
 #pixels = getPixelColumn(colorW, colorH, 5)
 #pixels.show()
