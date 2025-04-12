@@ -29,7 +29,7 @@ homeSensorPin.direction = digitalio.Direction.INPUT
 homeSensorPin.pull = digitalio.Pull.DOWN
 
 #neopixel pins
-num_pixels = 90
+num_pixels = 60
 num_uv_pixels = 30
 
 pixels = neopixel.NeoPixel(board.GP6, num_pixels)
@@ -48,13 +48,13 @@ uv_pixels.auto_write = False
 travelSteps = 4350
 stepsPerPixel = 50
 bufW = int(travelSteps/stepsPerPixel)+1 #88
-bufH = 60    #180 = LCM of 90 and 60
+bufH = 60
 
 colorW = bufW
-colorH = 90
+colorH = num_pixels
 
 uvW = bufW
-uvH = 60
+uvH = num_uv_pixels
 
 pixelDepth = 2;
 frameBuf_pixelDepth = adafruit_framebuf.GS2_HMSB
@@ -100,6 +100,10 @@ print(gc.mem_free())
 
 #fbuf.hline(0,1,35, maxColor)
 
+def profileTiming(label, start_ns, end_ns):
+    elapsed_us = (end_ns - start_ns) / 1000  # convert to microseconds
+    print(f"{label}: {elapsed_us:.1f} us")
+
 async def stepMotor(numsteps, direction):
     dirPin.value = direction
     for i in range(numsteps):
@@ -113,34 +117,20 @@ async def stepMotor(numsteps, direction):
     return True
 
 
-def getPixelColumn(physWidth, physHeight, colX):
-    hDiv = bufH / physHeight
-    wDiv = bufW / physWidth
-    bufX = int(colX * wDiv)
-    #print(hDiv)
-    colVals = []
-    for y in range(0, physHeight-1):
-        bufY = int(y * hDiv)
-        #fast but inaccurate solution:
-        #print(bufX)
-        #print(y*hDiv)
-        colVals.append(fbuf.pixel(bufX,bufY))
-        #optional TODO: get average of virtual pixels in range, rather than corner of range
-    return colVals
-
-def setPixelColumn(pixelString,physWidth, physHeight, colX):
-    pixelArr = getPixelColumn(physWidth, physHeight, colX)
-    for i, pixelVal in enumerate(pixelArr):
-        pixelVal = int(pixelVal * (255 / maxColor))
-        #print(pixelVal)
-        pixelString[i]=(pixelVal,pixelVal,pixelVal)
+def setPixelColumn(pixelString, width, height, colX, step=1):
+    scale = 255 / maxColor
+    for i, y in enumerate(range(0, height-step, step)):
+        #print("x: ",colX,"  y:",y)
+        pixelVal = fbuf.pixel(colX, y)
+        val = int(pixelVal * scale)
+        pixelString[i] = (val, val, val)
 
 async def homeRoutine():
     for i in range (1, bufW+10):
         uv_pixels[ i % num_uv_pixels ] = (255, 255, 255)
         uv_pixels[ (i-1) % num_uv_pixels ] = (0,0,0)
         uv_pixels.show()
-        await stepMotor(stepsPerPixel*50, 1)
+        await stepMotor(stepsPerPixel, 1)
     await stepMotor(stepsPerPixel, 0) #back off one step
 
 
@@ -158,20 +148,29 @@ def renderLogo():
 async def drawBufferForwards():
      for i in range (1, bufW-1):
          setPixelColumn(pixels, colorW, colorH, i)
+         t0 = time.monotonic_ns()
          setPixelColumn(uv_pixels, uvW, uvH, i)
-         print("x:")
-         print(i)
-         print(uv_pixels)
-         pixels.show()
+         t1 = time.monotonic_ns()
+         #print("x:")
+         #print(i)
+         #print(uv_pixels)
+         t2 = time.monotonic_ns()
+         #pixels.show()
          uv_pixels.show()
+         t3 = time.monotonic_ns()
          await stepMotor(stepsPerPixel, 1) #spends ~25ms moving 50 steps
+         t4 = time.monotonic_ns()
+         profileTiming("setPixelColumn", t0, t1)
+         profileTiming("debugPrints", t1, t2)
+         profileTiming("uvpixels.show", t2, t3)
+         profileTiming("motor steps", t3, t4)
 
 async def drawBufferBackwards():
     for i in range (bufW-2, 0, -1):
          setPixelColumn(pixels, colorW, colorH, i)
          setPixelColumn(uv_pixels, uvW, uvH, i)
-         print(uv_pixels)
-         pixels.show()
+         #print(uv_pixels)
+         #pixels.show()
          uv_pixels.show()
          await stepMotor(stepsPerPixel, 0) #spends ~25ms moving 50 steps
 
