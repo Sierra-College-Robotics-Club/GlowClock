@@ -39,9 +39,9 @@ uv_pixels.auto_write = False
 
 #constants: 
 #dimensions of virtual and physical displays
-travelSteps = 4350
-stepsPerPixel = 40
-bufW = int(travelSteps/stepsPerPixel)+1 #88
+travelSteps = 4250
+stepsPerPixel = 35
+bufW = int(travelSteps/stepsPerPixel)+1
 bufH = 60
 
 colorW = bufW
@@ -55,11 +55,12 @@ frameBuf_pixelDepth = framebuf.GS2_HMSB
 maxColor = (2**pixelDepth)-1; #2 bits per pixel, values 0-3
 
 # Shared variables for multithreading
-needed_steps = 0;
+steps_needed = 0;
+step_direction = 0;
+step_lock = _thread.allocate_lock()
 
-# Optional: create a lock for synchronization
-stepping_lock = _thread.allocate_lock()
-
+stepCounterForward = 0
+stepCounterReverse = 0
 
 print(gc.mem_free())
 #+4 prevents value error, TODO figure out cause of that (allocation slightly too small)
@@ -76,19 +77,6 @@ def profileTiming(label, start_ms, end_ms):
     elapsed_ms = time.ticks_diff(end_ms, start_ms) / 1000  # convert to microseconds
     print(f"{label}: {elapsed_ms:.1f} ms")
 
-def stepMotor(numsteps, direction):
-    dirPin.value(direction)
-    for i in range(numsteps):
-        if(homeSensorPin.value() == 0 and direction == 1):
-            stepPin.value(0)
-            return False
-        stepPin.value(1)
-        time.sleep_us(600)
-        stepPin.value(0)
-        time.sleep_us(600)
-    return True
-
-
 def setPixelColumn(pixelString, width, height, colX, step=1):
     scale = 255 / maxColor
     for i, y in enumerate(range(0, height-step, step)):
@@ -98,12 +86,14 @@ def setPixelColumn(pixelString, width, height, colX, step=1):
         pixelString[i] = (val, val, val)
 
 def homeRoutine():
-    for i in range (1, bufW+10):
+    for i in range (1, (bufW*4)+10):
         uv_pixels[ i % num_uv_pixels ] = (255, 255, 255)
         uv_pixels[ (i-1) % num_uv_pixels ] = (0,0,0)
         uv_pixels.write()
-        stepMotor(stepsPerPixel, 1)
-    stepMotor(stepsPerPixel, 0) #back off one step
+        #waitForSteps()
+        requestMotion(stepsPerPixel/4, 1)
+    requestMotion(stepsPerPixel*2, 0) #back off one step
+    waitForSteps()
 
 
 def clearDisplay():
@@ -118,6 +108,7 @@ def renderLogo():
     fbuf.text("Robotics Club!",2,10,maxColor)
 
 def drawBufferForwards():
+     global stepCounterForward
      for i in range (1, bufW-1):
          setPixelColumn(pixels, colorW, colorH, i)
          #t0 = time.ticks_us()
@@ -130,7 +121,8 @@ def drawBufferForwards():
          #pixels.show()
          uv_pixels.write()
          #t3 = time.ticks_us()
-         stepMotor(stepsPerPixel, 1) #spends ~25ms moving 50 steps
+         #waitForSteps()
+         requestMotion(stepsPerPixel, 1) #spends ~25ms moving 50 steps
          #t4 = time.ticks_us()
          #profileTiming("setPixelColumn", t0, t1)
          #profileTiming("debugPrints", t1, t2)
@@ -138,26 +130,85 @@ def drawBufferForwards():
          #profileTiming("motor steps", t3, t4)
 
 def drawBufferBackwards():
-    for i in range (bufW-2, 0, -1):
+    global stepCounterReverse
+    for i in range (bufW-1, 1, -1):
          setPixelColumn(pixels, colorW, colorH, i)
          setPixelColumn(uv_pixels, uvW, uvH, i)
          uv_pixels.write()
-         stepMotor(stepsPerPixel, 0) #spends ~25ms moving 50 steps
+         #waitForSteps()
+         requestMotion(stepsPerPixel, 0) #spends ~25ms moving 50 steps
+         
 
 def mainLoop():
-    print("startingMainLoop")
     while(True):
-        print("looping")
         #gc.collect()
+        global stepCounterForward
+        global stepCounterReverse
         #print("Free mem:", gc.mem_free())
         #render backwards first after homing
         drawBufferBackwards()
         drawBufferForwards()
+        print("Fwd:", stepCounterForward, "Back:", stepCounterReverse)
 
+def waitForSteps(threshold=0):
+    global steps_needed
+    while True:
+        with step_lock:
+            #print("waiting")
+            if steps_needed <= threshold:
+                break
+        time.sleep_us(50)  # small yield to avoid hogging the lock
+        
 def main():
+    _thread.start_new_thread(stepperThread,())
     homeRoutine()
     renderLogo()
+    global stepCounterForward
+    global stepCounterReverse
+    stepCounterForward = 0
+    stepCounterReverse = 0
     mainLoop()
+    
+def stepMotor(numsteps, direction):
+    dirPin.value(direction)
+    global stepCounterForward
+    global stepCounterReverse
+    for i in range(numsteps):
+        if(homeSensorPin.value() == 0 and direction == 1):
+            stepPin.value(0)
+            return False
+        if(direction):
+            stepCounterForward=stepCounterForward+1
+        else:
+            stepCounterReverse=stepCounterReverse+1
+        stepPin.value(1)
+        time.sleep_us(300)
+        stepPin.value(0)
+        time.sleep_us(300)
+    return True
+
+def requestMotion(numSteps, stepDir):
+    global steps_needed
+    global step_direction
+    if(stepDir == step_direction):
+        waitForSteps(2)
+    else:
+        waitForSteps()
+    with step_lock:
+        steps_needed = steps_needed + numSteps
+        step_direction = stepDir
+
+def stepperThread():
+    global steps_needed
+    global step_direction
+    while True:
+        if steps_needed > 0:
+            #print("stepping")
+            takingSteps = steps_needed
+            stepMotor(steps_needed, step_direction)
+            
+            steps_needed = steps_needed - takingSteps                
+
 
 main()
 print("exiting (error in main loop?)")
