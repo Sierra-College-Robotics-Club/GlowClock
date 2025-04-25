@@ -27,6 +27,8 @@ homeSensorPin = Pin(9, Pin.IN, Pin.PULL_DOWN)
 num_pixels = 60
 num_uv_pixels = 30
 
+microSecondsPerStep = 750
+
 pixels = neopixel.NeoPixel(Pin(6), num_pixels)
 uv_pixels = neopixel.NeoPixel(Pin(7), num_pixels)
 
@@ -55,11 +57,12 @@ frameBuf_pixelDepth = framebuf.GS2_HMSB
 maxColor = (2**pixelDepth)-1; #2 bits per pixel, values 0-3
 
 # Shared variables for multithreading
-steps_needed = 0;
-step_direction = 0;
+steps_needed = 0
+step_direction = 0
 step_lock = _thread.allocate_lock()
 
 stepCounterForward = 0
+stepCounterHomeSkipped = 0
 stepCounterReverse = 0
 
 print(gc.mem_free())
@@ -106,6 +109,7 @@ def fillDisplay(newColor):
 def renderLogo():
     fbuf.text("Sierra College",2,1,maxColor)
     fbuf.text("Robotics Club!",2,10,maxColor)
+    fbuf.text("Hi",2,18,maxColor)
 
 def drawBufferForwards():
      global stepCounterForward
@@ -144,11 +148,12 @@ def mainLoop():
         #gc.collect()
         global stepCounterForward
         global stepCounterReverse
+        global stepCounterHomeSkipped
         #print("Free mem:", gc.mem_free())
         #render backwards first after homing
         drawBufferBackwards()
         drawBufferForwards()
-        print("Fwd:", stepCounterForward, "Back:", stepCounterReverse)
+        print("Fwd:", stepCounterForward, "Back:", stepCounterReverse, "Skipped:", stepCounterHomeSkipped)
 
 def waitForSteps(threshold=0):
     global steps_needed
@@ -165,26 +170,31 @@ def main():
     renderLogo()
     global stepCounterForward
     global stepCounterReverse
+    global stepCounterHomeSkipped
+    waitForSteps()
     stepCounterForward = 0
     stepCounterReverse = 0
+    stepCounterHomeSkipped = 0
     mainLoop()
     
 def stepMotor(numsteps, direction):
     dirPin.value(direction)
     global stepCounterForward
     global stepCounterReverse
+    global stepCounterHomeSkipped
     for i in range(numsteps):
         if(homeSensorPin.value() == 0 and direction == 1):
             stepPin.value(0)
+            stepCounterHomeSkipped = stepCounterHomeSkipped + 1
             return False
         if(direction):
             stepCounterForward=stepCounterForward+1
         else:
             stepCounterReverse=stepCounterReverse+1
         stepPin.value(1)
-        time.sleep_us(300)
+        time.sleep_us(microSecondsPerStep)
         stepPin.value(0)
-        time.sleep_us(300)
+        time.sleep_us(microSecondsPerStep)
     return True
 
 def requestMotion(numSteps, stepDir):
