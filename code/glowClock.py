@@ -153,8 +153,9 @@ def renderLogo():
 def renderTime():
     (year, month, day, weekday, hour, minute, second, zero) = ds.datetime()
     print(f"it is {hour}:{minute}")
-    fbuf.rect(0,19, 8, bufW, 0, True)
-    fbuf.text(f"it is {hour}:{minute}",2,19,maxColor)
+    #fbuf.fill(1)
+    fbuf.rect(0,19, bufW, 10, 0, True)
+    fbuf.text(f"it is {hour}:{minute}",2,20,maxColor)
 
 def drawBufferForwards():
      global stepCounterForward
