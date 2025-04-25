@@ -3,10 +3,13 @@
 # Tested with MicroPython 1.25
 import time
 from machine import Pin
+from machine import I2C
 import neopixel
 import gc
 import framebuf
 import _thread
+
+from ds3231 import DS3231   #from https://github.com/picoscratch/micropython-DS3231
 
 
 #CONNECTION LAYOUT:
@@ -15,6 +18,14 @@ import _thread
 #LED_OUT_3: Reserved for future use, likely for staggered UV LED row
 #LED_OUT_4: Homing sensor
 
+
+#i2c pins:
+sdaPin = Pin(20)
+sclPin = Pin(21)
+
+i2c = I2C(0, sda=sdaPin, scl=sclPin, freq=400000)
+#using DS3231MZ RTC
+ds = DS3231(i2c)
 
 #stepper motor pins
 stepPin = Pin(19, Pin.OUT)
@@ -76,6 +87,33 @@ print(gc.mem_free())
 
 #    fbuf.pixel(x, y, color)
 
+def scanI2C():
+    devices = i2c.scan()
+    if len(devices) != 0:
+        print('Number of I2C devices found=',len(devices))
+        for device in devices:
+            print("Device Hexadecimel Address= ",hex(device))
+    else:
+        print("No i2c devices found")
+
+#update to desired values, only call when intially setting clock
+def setRTCTime():
+    now = ds.datetime()
+    print(f"setting time from {now}")
+    year = 2025 # Can be yyyy or yy format
+    month = 4
+    mday = 25
+    hour = 15 # 24 hour format only
+    minute = 23
+    second = 0 # Optional
+    weekday = 6 # Optional
+    datetime = (year, month, mday, hour, minute, second, weekday)
+    ds.datetime(datetime)
+    now = ds.datetime()
+    print(f"setting time to {now}")
+
+
+
 def profileTiming(label, start_ms, end_ms):
     elapsed_ms = time.ticks_diff(end_ms, start_ms) / 1000  # convert to microseconds
     print(f"{label}: {elapsed_ms:.1f} ms")
@@ -109,7 +147,14 @@ def fillDisplay(newColor):
 def renderLogo():
     fbuf.text("Sierra College",2,1,maxColor)
     fbuf.text("Robotics Club!",2,10,maxColor)
-    fbuf.text("Hi",2,18,maxColor)
+    renderTime()
+    #fbuf.text("Hi",2,18,maxColor)
+
+def renderTime():
+    (year, month, day, weekday, hour, minute, second, zero) = ds.datetime()
+    print(f"it is {hour}:{minute}")
+    fbuf.rect(0,19, 8, bufW, 0, True)
+    fbuf.text(f"it is {hour}:{minute}",2,19,maxColor)
 
 def drawBufferForwards():
      global stepCounterForward
@@ -153,6 +198,7 @@ def mainLoop():
         #render backwards first after homing
         drawBufferBackwards()
         drawBufferForwards()
+        renderTime()
         print("Fwd:", stepCounterForward, "Back:", stepCounterReverse, "Skipped:", stepCounterHomeSkipped)
 
 def waitForSteps(threshold=0):
@@ -167,6 +213,8 @@ def waitForSteps(threshold=0):
 def main():
     _thread.start_new_thread(stepperThread,())
     homeRoutine()
+    scanI2C()
+    #setRTCTime()   #enable only when intially updating rtc
     renderLogo()
     global stepCounterForward
     global stepCounterReverse
