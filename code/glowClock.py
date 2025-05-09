@@ -76,6 +76,8 @@ stepCounterForward = 0
 stepCounterHomeSkipped = 0
 stepCounterReverse = 0
 
+lastMinute = 0
+
 print(gc.mem_free())
 #+4 prevents value error, TODO figure out cause of that (allocation slightly too small)
 fbuf = framebuf.FrameBuffer(bytearray(round((bufW+4)*(bufH)/4)), bufW, bufH, frameBuf_pixelDepth)
@@ -86,6 +88,16 @@ print(gc.mem_free())
 #print(gc.mem_free())
 
 #    fbuf.pixel(x, y, color)
+
+#each message can be up to 3 rows of 15 characters, or 2 rows and time
+    #"123456789012345","123456789012345" , "123456789012345"
+messageArray = [
+    ["Sierra College", "Robotics Club!" ],
+    ["Hello World",    "This is a TEST" ],
+    ["Howre you doing","Because I'm a",  "Glow Clock!"],
+    ["In your world",  "with human time"],
+    ["all your base",  "are belong to us"]
+]
 
 def scanI2C():
     devices = i2c.scan()
@@ -101,10 +113,10 @@ def setRTCTime():
     now = ds.datetime()
     print(f"setting time from {now}")
     year = 2025 # Can be yyyy or yy format
-    month = 4
-    mday = 25
-    hour = 15 # 24 hour format only
-    minute = 23
+    month = 5
+    mday = 9
+    hour = 12 # 24 hour format only
+    minute = 58
     second = 0 # Optional
     weekday = 6 # Optional
     datetime = (year, month, mday, hour, minute, second, weekday)
@@ -149,12 +161,17 @@ def renderLogo():
     fbuf.text("Robotics Club!",2,10,maxColor)
     renderTime()
     #fbuf.text("Hi",2,18,maxColor)
+    
+def renderText(text, x, y, color):
+    fbuf.text(text, x, y, color)
 
 def renderTime():
     (year, month, day, weekday, hour, minute, second, zero) = ds.datetime()
     print(f"it is {hour}:{minute}")
     #fbuf.fill(1)
+    #erase the time field
     fbuf.rect(0,19, bufW, 10, 0, True)
+    
     fbuf.text(f"it is {hour}:{minute}",2,20,maxColor)
 
 def drawBufferForwards():
@@ -187,8 +204,26 @@ def drawBufferBackwards():
          uv_pixels.write()
          #waitForSteps()
          requestMotion(stepsPerPixel, 0) #spends ~25ms moving 50 steps
-         
 
+
+def setNewMessage(minute):
+    messageIndex = minute % len(messageArray)
+    clearDisplay()
+    height = 1
+    for message in messageArray[messageIndex]:
+        renderText(message, 2, height, maxColor)
+        height = height + 9
+    #only write the time if there's room
+    if (len(messageArray[messageIndex]) < 3):
+        renderTime()
+
+
+def displayUpdate():
+    (year, month, day, weekday, hour, minute, second, zero) = ds.datetime()
+    if (minute != lastMinute):
+        setNewMessage(minute)
+    #otherwise don't change framebuffer
+    
 def mainLoop():
     while(True):
         #gc.collect()
@@ -199,7 +234,8 @@ def mainLoop():
         #render backwards first after homing
         drawBufferBackwards()
         drawBufferForwards()
-        renderTime()
+        displayUpdate()
+        #renderTime()
         print("Fwd:", stepCounterForward, "Back:", stepCounterReverse, "Skipped:", stepCounterHomeSkipped)
 
 def waitForSteps(threshold=0):
