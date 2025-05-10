@@ -53,7 +53,7 @@ uv_pixels.auto_write = False
 #constants: 
 #dimensions of virtual and physical displays
 travelSteps = 4250
-stepsPerPixel = 35
+stepsPerPixel = 32
 bufW = int(travelSteps/stepsPerPixel)+1
 bufH = 60
 
@@ -89,14 +89,16 @@ print(gc.mem_free())
 
 #    fbuf.pixel(x, y, color)
 
-#each message can be up to 3 rows of 15 characters, or 2 rows and time
-    #"123456789012345","123456789012345" , "123456789012345"
+#each message can be up to 3 rows of 16 characters, or 2 rows and time
+    #"1234567890123456","1234567890123456" , "1234567890123456"
 messageArray = [
-    ["Sierra College", "Robotics Club!" ],
-    ["Hello World",    "This is a TEST" ],
-    ["Howre you doing","Because I'm a",  "Glow Clock!"],
-    ["In your world",  "with human time"],
-    ["all your base",  "are belong to us"]
+    ["Sierra College",  "Robotics Club!" ],
+    ["Hello World",     "This is a TEST" ],
+    ["Howre you doing", "Because I'm a",     "Glow Clock!"],
+    ["In your world",   "with human time"],
+    ["ALL YOUR BASE",   "ARE BELONG TO US"],
+    ["welcome to the",  "makerspace!"],
+    ["Narnian time:",   "Synchronized"]
 ]
 
 def scanI2C():
