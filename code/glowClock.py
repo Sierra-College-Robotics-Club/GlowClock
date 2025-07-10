@@ -8,6 +8,7 @@ import neopixel
 import gc
 import framebuf
 import _thread
+import random
 
 from ds3231 import DS3231   #from https://github.com/picoscratch/micropython-DS3231
 
@@ -33,6 +34,10 @@ dirPin = Pin(18, Pin.OUT)
 
 #home sensor pin, uses LED_OUT_4 port
 homeSensorPin = Pin(9, Pin.IN, Pin.PULL_DOWN)
+
+okButtonPin = Pin(11, Pin.IN, Pin.PULL_DOWN)
+backButtonPin = Pin(15, Pin.IN, Pin.PULL_DOWN)
+
 
 #neopixel pins
 num_pixels = 60
@@ -78,6 +83,8 @@ stepCounterReverse = 0
 
 lastMinute = 0
 
+gameTargetRow = 0
+
 print(gc.mem_free())
 #+4 prevents value error, TODO figure out cause of that (allocation slightly too small)
 fbuf = framebuf.FrameBuffer(bytearray(round((bufW+4)*(bufH)/4)), bufW, bufH, frameBuf_pixelDepth)
@@ -93,12 +100,16 @@ print(gc.mem_free())
     #"1234567890123456","1234567890123456" , "1234567890123456"
 messageArray = [
     ["Sierra College",  "Robotics Club!" ],
+    ["Welcome To",      "Open Sauce!"],
+    ["Please don't",    "Touch! I'm busy"],
     ["Hello World",     "This is a TEST" ],
     ["Howre you doing", "Because I'm a",     "Glow Clock!"],
     ["In your world",   "with human time"],
     ["ALL YOUR BASE",   "ARE BELONG TO US"],
     ["welcome to the",  "makerspace!"],
-    ["Narnian time:",   "Synchronized"]
+    ["Narnian time:",   "Synchronized"],
+    ["Special Action", "Dots"],
+    ["Special Action", "Game4"]
 ]
 
 def scanI2C():
@@ -134,7 +145,7 @@ def profileTiming(label, start_ms, end_ms):
 
 def setPixelColumn(pixelString, width, height, colX, step=1):
     scale = 255 / maxColor
-    for i, y in enumerate(range(0, height-step, step)):
+    for i, y in enumerate(range(0, height-step+1, step)):
         #print("x: ",colX,"  y:",y)
         pixelVal = fbuf.pixel(colX, y)
         val = int(pixelVal * scale)
@@ -156,6 +167,7 @@ def clearDisplay():
 
 def fillDisplay(newColor):
     fbuf.fill(newColor)
+    #fbuf.rect(0,0,bufW,bufH-2,newColor)
 
 
 def renderLogo():
@@ -172,9 +184,22 @@ def renderTime():
     print(f"it is {hour}:{minute}")
     #fbuf.fill(1)
     #erase the time field
-    fbuf.rect(0,19, bufW, 10, 0, True)
+    minuteSpacer = ""
+    fbuf.rect(0,19, bufW, 11, 0, True)
+    if hour > 12:
+        hour = hour - 12
+    if minute < 10:
+        minuteSpacer="0"
+    fbuf.text(f"it is {hour}:{minuteSpacer}{minute}",2,20,maxColor)
+
+def handleButtons():
+    if(okButtonPin.value()):
+        for j in range(0, num_uv_pixels):
+            uv_pixels[j] = (255, 255, 255)
+    if(backButtonPin.value()):
+         for j in range(0, num_uv_pixels):
+             uv_pixels[j] = (0, 0, 0)
     
-    fbuf.text(f"it is {hour}:{minute}",2,20,maxColor)
 
 def drawBufferForwards():
      global stepCounterForward
@@ -188,6 +213,7 @@ def drawBufferForwards():
          #print(uv_pixels)
          #t2 = time.ticks_us()
          #pixels.show()
+         handleButtons()
          uv_pixels.write()
          #t3 = time.ticks_us()
          #waitForSteps()
@@ -203,27 +229,45 @@ def drawBufferBackwards():
     for i in range (bufW-1, 1, -1):
          setPixelColumn(pixels, colorW, colorH, i)
          setPixelColumn(uv_pixels, uvW, uvH, i)
+         handleButtons()
          uv_pixels.write()
          #waitForSteps()
          requestMotion(stepsPerPixel, 0) #spends ~25ms moving 50 steps
 
+def drawRandomDots():
+    clearDisplay()
+    for i in range(0,256):
+        fbuf.pixel(random.randint(0, bufW), random.randint(0, bufH), random.randint(1, maxColor))
+
+def setupGame4():
+    clearDisplay()
+    gameTargetRow = random.randint(0, num_uv_pixels)
+    fbuf.hline(0, gameTargetRow, bufW, maxColor)
+    fbuf.line(0,0, bufW, num_uv_pixels, maxColor)
 
 def setNewMessage(minute):
     messageIndex = minute % len(messageArray)
     clearDisplay()
     height = 1
-    for message in messageArray[messageIndex]:
-        renderText(message, 2, height, maxColor)
-        height = height + 9
-    #only write the time if there's room
-    if (len(messageArray[messageIndex]) < 3):
-        renderTime()
+    if messageArray[messageIndex][0] == "Special Action":
+        if messageArray[messageIndex][1] == "Dots":
+           drawRandomDots()
+        if messageArray[messageIndex][1] == "Game4":
+           setupGame4()
+    else:
+        for message in messageArray[messageIndex]:
+            renderText(message, 2, height, maxColor)
+            height = height + 9
+        #only write the time if there's room
+        if (len(messageArray[messageIndex]) < 3):
+            renderTime()
 
 
 def displayUpdate():
     (year, month, day, weekday, hour, minute, second, zero) = ds.datetime()
     if (minute != lastMinute):
         setNewMessage(minute)
+    fbuf.hline(0, 29, int(bufW/60*second), 255)
     #otherwise don't change framebuffer
     
 def mainLoop():
@@ -235,6 +279,7 @@ def mainLoop():
         #print("Free mem:", gc.mem_free())
         #render backwards first after homing
         drawBufferBackwards()
+        displayUpdate()
         drawBufferForwards()
         displayUpdate()
         #renderTime()
