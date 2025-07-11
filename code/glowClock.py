@@ -9,6 +9,8 @@ import gc
 import framebuf
 import _thread
 import random
+import math
+import array
 
 from ds3231 import DS3231   #from https://github.com/picoscratch/micropython-DS3231
 
@@ -109,7 +111,9 @@ messageArray = [
     ["welcome to the",  "makerspace!"],
     ["Narnian time:",   "Synchronized"],
     ["Special Action", "Dots"],
-    ["Special Action", "Game4"]
+    ["Special Action", "Game4"],
+    ["Special Action", "Polygons"],
+    ["Special Action", "CursedPolygons"]
 ]
 
 def scanI2C():
@@ -191,6 +195,7 @@ def renderTime():
     if minute < 10:
         minuteSpacer="0"
     fbuf.text(f"it is {hour}:{minuteSpacer}{minute}",2,20,maxColor)
+    drawPolygon((int(second/6)%10)+1, 100, 24,  7,  maxColor)
 
 def handleButtons():
     if(okButtonPin.value()):
@@ -245,15 +250,31 @@ def setupGame4():
     fbuf.hline(0, gameTargetRow, bufW, maxColor)
     fbuf.line(0,0, bufW, num_uv_pixels, maxColor)
 
+def drawRandomPolygons():
+    clearDisplay()
+    for i in range(0,25):
+        drawPolygon(random.randint(0, 10), random.randint(0, bufW), random.randint(0, bufH),  random.randint(1, 10), random.randint(1, maxColor))
+
+
+def drawCursedPolygons():
+    clearDisplay()
+    for i in range(0,35):
+        drawPolygon(random.randint(0, 10), random.randint(1, bufW), random.randint(0, bufW), random.randint(0, bufH), random.randint(1, maxColor))
+
+
 def setNewMessage(minute):
     messageIndex = minute % len(messageArray)
     clearDisplay()
     height = 1
     if messageArray[messageIndex][0] == "Special Action":
         if messageArray[messageIndex][1] == "Dots":
-           drawRandomDots()
+            drawRandomDots()
         if messageArray[messageIndex][1] == "Game4":
-           setupGame4()
+            setupGame4()
+        if messageArray[messageIndex][1] == "Polygons":
+            drawRandomPolygons()
+        if messageArray[messageIndex][1] == "CursedPolygons":
+            drawCursedPolygons()
     else:
         for message in messageArray[messageIndex]:
             renderText(message, 2, height, maxColor)
@@ -262,13 +283,22 @@ def setNewMessage(minute):
         if (len(messageArray[messageIndex]) < 3):
             renderTime()
 
+def drawPolygon(n, cx, cy, radius, color):
+    verts = array.array('h', [])
+    for i in range(n):
+        theta = 2 * math.pi * i / n
+        x = radius * math.cos(theta)
+        y = radius * math.sin(theta)
+        verts.append(int(round(x)))
+        verts.append(int(round(y/2)))
+    fbuf.poly(cx, cy, verts, color)
 
 def displayUpdate():
     (year, month, day, weekday, hour, minute, second, zero) = ds.datetime()
     if (minute != lastMinute):
         setNewMessage(minute)
     fbuf.hline(0, 29, int(bufW/60*second), 255)
-    #otherwise don't change framebuffer
+
     
 def mainLoop():
     while(True):
