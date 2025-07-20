@@ -39,6 +39,10 @@ homeSensorPin = Pin(9, Pin.IN, Pin.PULL_DOWN)
 
 okButtonPin = Pin(11, Pin.IN, Pin.PULL_DOWN)
 backButtonPin = Pin(15, Pin.IN, Pin.PULL_DOWN)
+upButtonPin = Pin(10, Pin.IN, Pin.PULL_DOWN)
+downButtonPin = Pin(12, Pin.IN, Pin.PULL_DOWN)
+leftButtonPin = Pin(14, Pin.IN, Pin.PULL_DOWN)
+rightButtonPin = Pin(13, Pin.IN, Pin.PULL_DOWN)
 
 
 #neopixel pins
@@ -87,6 +91,9 @@ lastMinute = 0
 
 gameTargetRow = 0
 
+isEraseCycle = False
+specialModeGlobal = 0
+
 print(gc.mem_free())
 #+4 prevents value error, TODO figure out cause of that (allocation slightly too small)
 fbuf = framebuf.FrameBuffer(bytearray(round((bufW+4)*(bufH)/4)), bufW, bufH, frameBuf_pixelDepth)
@@ -101,19 +108,28 @@ print(gc.mem_free())
 #each message can be up to 3 rows of 16 characters, or 2 rows and time
     #"1234567890123456","1234567890123456" , "1234567890123456"
 messageArray = [
+
     ["Sierra College",  "Robotics Club!" ],
     ["Welcome To",      "Open Sauce!"],
+    ["Special Action", "Dots"],
     ["Please don't",    "Touch! I'm busy"],
     ["Hello World",     "This is a TEST" ],
+    ["Special Action", "Game4"],
     ["Howre you doing", "Because I'm a",     "Glow Clock!"],
     ["In your world",   "with human time"],
+
     ["ALL YOUR BASE",   "ARE BELONG TO US"],
-    ["welcome to the",  "makerspace!"],
-    ["Narnian time:",   "Synchronized"],
-    ["Special Action", "Dots"],
-    ["Special Action", "Game4"],
+
     ["Special Action", "Polygons"],
-    ["Special Action", "CursedPolygons"]
+    ["follow us on",  "instagram", "@sierrabeepbop"],
+    ["Special Action", "Gradient"],
+#    ["welcome to the",  "makerspace!"],
+#    ["Narnian time:",   "Synchronized"],
+    ["Special Action", "CursedPolygons"],
+    ["UV + Glow Paint", "=Glow Clock!"],
+    ["Special Action", "Gradient2"],
+
+
 ]
 
 def scanI2C():
@@ -195,16 +211,37 @@ def renderTime():
     if minute < 10:
         minuteSpacer="0"
     fbuf.text(f"it is {hour}:{minuteSpacer}{minute}",2,20,maxColor)
-    drawPolygon((int(second/6)%10)+1, 100, 24,  7,  maxColor)
+    drawPolygon((int(second/6)%10)+1, 110, 24,  7,  maxColor)
 
-def handleButtons():
+
+#handle button presses and other real-time rendering
+def handleButtons(xPixel):
+    global isEraseCycle
+    global specialModeGlobal
     if(okButtonPin.value()):
         for j in range(0, num_uv_pixels):
             uv_pixels[j] = (255, 255, 255)
     if(backButtonPin.value()):
-         for j in range(0, num_uv_pixels):
-             uv_pixels[j] = (0, 0, 0)
-    
+        for j in range(0, num_uv_pixels):
+            uv_pixels[j] = (0, 0, 0)
+    if(upButtonPin.value()):
+        for j in range(0, num_uv_pixels):
+            uv_pixels[j] = (170, 170, 170)
+    if(downButtonPin.value()):
+        for j in range(0, num_uv_pixels):
+            uv_pixels[j] = (85, 85, 85)
+    if(specialModeGlobal == 1):
+        for j in range(0, num_uv_pixels):
+            x = int(255*(30*xPixel/bufW)%30)
+            uv_pixels[j] = (x,x,x)
+    if(specialModeGlobal == 2):
+        for j in range(0, num_uv_pixels):
+            x = int(255*(30*xPixel+j/bufW)%30)
+            uv_pixels[j] = (x,x,x)
+    if(isEraseCycle and (specialModeGlobal!=1 and specialModeGlobal!=2)):
+        #print("erase cycle")
+        for j in range(0, num_uv_pixels):
+            uv_pixels[j] = (255, 255, 255)
 
 def drawBufferForwards():
      global stepCounterForward
@@ -218,7 +255,7 @@ def drawBufferForwards():
          #print(uv_pixels)
          #t2 = time.ticks_us()
          #pixels.show()
-         handleButtons()
+         handleButtons(i)
          uv_pixels.write()
          #t3 = time.ticks_us()
          #waitForSteps()
@@ -234,7 +271,7 @@ def drawBufferBackwards():
     for i in range (bufW-1, 1, -1):
          setPixelColumn(pixels, colorW, colorH, i)
          setPixelColumn(uv_pixels, uvW, uvH, i)
-         handleButtons()
+         handleButtons(i)
          uv_pixels.write()
          #waitForSteps()
          requestMotion(stepsPerPixel, 0) #spends ~25ms moving 50 steps
@@ -261,20 +298,30 @@ def drawCursedPolygons():
     for i in range(0,35):
         drawPolygon(random.randint(0, 10), random.randint(1, bufW), random.randint(0, bufW), random.randint(0, bufH), random.randint(1, maxColor))
 
+def activateGradient():
+    global specialModeGlobal
+    specialModeGlobal = 1
+
 
 def setNewMessage(minute):
+    global specialModeGlobal
     messageIndex = minute % len(messageArray)
     clearDisplay()
     height = 1
     if messageArray[messageIndex][0] == "Special Action":
         if messageArray[messageIndex][1] == "Dots":
             drawRandomDots()
-        if messageArray[messageIndex][1] == "Game4":
+        elif messageArray[messageIndex][1] == "Game4":
             setupGame4()
-        if messageArray[messageIndex][1] == "Polygons":
+        elif messageArray[messageIndex][1] == "Polygons":
             drawRandomPolygons()
-        if messageArray[messageIndex][1] == "CursedPolygons":
+        elif messageArray[messageIndex][1] == "CursedPolygons":
             drawCursedPolygons()
+        elif messageArray[messageIndex][1] == "Gradient":
+            specialModeGlobal = 1
+        elif messageArray[messageIndex][1] == "Gradient2":
+            specialModeGlobal = 2
+            
     else:
         for message in messageArray[messageIndex]:
             renderText(message, 2, height, maxColor)
@@ -294,9 +341,19 @@ def drawPolygon(n, cx, cy, radius, color):
     fbuf.poly(cx, cy, verts, color)
 
 def displayUpdate():
+    global isEraseCycle
+    global lastMinute
+    global specialModeGlobal
     (year, month, day, weekday, hour, minute, second, zero) = ds.datetime()
     if (minute != lastMinute):
-        setNewMessage(minute)
+        isEraseCycle = True
+        print("new minute! Starting erase cycle")
+        lastMinute = minute
+    else:
+        isEraseCycle = False
+        specialModeGlobal = 0
+        print("disabling erase cycle")
+    setNewMessage(minute)
     fbuf.hline(0, 29, int(bufW/60*second), 255)
 
     
