@@ -88,6 +88,9 @@ stepCounterHomeSkipped = 0
 stepCounterReverse = 0
 
 lastMinute = 0
+lastSecond = 0
+
+currentStage = 0
 
 gameTargetRow = 0
 
@@ -168,7 +171,7 @@ def setPixelColumn(pixelString, width, height, colX, step=1):
     for i, y in enumerate(range(0, height-step+1, step)):
         #print("x: ",colX,"  y:",y)
         pixelVal = fbuf.pixel(colX, y)
-        val = int(pixelVal * scale)
+        val = int((pixelVal * scale)) # 255 - () for inverted mode
         pixelString[i] = (val, val, val)
 
 def homeRoutine():
@@ -305,7 +308,8 @@ def activateGradient():
 
 def setNewMessage(minute):
     global specialModeGlobal
-    messageIndex = minute % len(messageArray)
+    global currentStage
+    messageIndex = currentStage % len(messageArray)
     clearDisplay()
     height = 1
     if messageArray[messageIndex][0] == "Special Action":
@@ -343,12 +347,16 @@ def drawPolygon(n, cx, cy, radius, color):
 def displayUpdate():
     global isEraseCycle
     global lastMinute
+    global lastSecond
     global specialModeGlobal
+    global currentStage
     (year, month, day, weekday, hour, minute, second, zero) = ds.datetime()
-    if (minute != lastMinute):
+    if (minute != lastMinute or second > (lastSecond+30)):
         isEraseCycle = True
         print("new minute! Starting erase cycle")
+        currentStage = (currentStage + 1) % len(messageArray)
         lastMinute = minute
+        lastSecond = second
     else:
         isEraseCycle = False
         specialModeGlobal = 0
