@@ -18,7 +18,7 @@ from ds3231 import DS3231   #from https://github.com/picoscratch/micropython-DS3
 #CONNECTION LAYOUT:
 #LED_OUT_1: Color LEDs
 #LED_OUT_2: UV LEDs
-#LED_OUT_3: Reserved for future use, likely for staggered UV LED row
+#LED_OUT_3: staggered UV LEDs
 #LED_OUT_4: Homing sensor
 
 
@@ -53,6 +53,7 @@ microSecondsPerStep = 750
 
 pixels = neopixel.NeoPixel(Pin(6), num_pixels)
 uv_pixels = neopixel.NeoPixel(Pin(7), num_pixels)
+uv_pixels2 = neopixel.NeoPixel(Pin(8), num_pixels)
 
 #print(pixels.brightness)
 pixels.brightness = 0.45
@@ -72,7 +73,7 @@ colorW = bufW
 colorH = num_pixels
 
 uvW = bufW
-uvH = num_uv_pixels
+uvH = num_uv_pixels*2
 
 pixelDepth = 2;
 frameBuf_pixelDepth = framebuf.GS2_HMSB
@@ -99,7 +100,7 @@ specialModeGlobal = 0
 
 print(gc.mem_free())
 #+4 prevents value error, TODO figure out cause of that (allocation slightly too small)
-fbuf = framebuf.FrameBuffer(bytearray(round((bufW+4)*(bufH)/4)), bufW, bufH, frameBuf_pixelDepth)
+fbuf = framebuf.FrameBuffer(bytearray(round((bufW+8)*(bufH)/4)), bufW+1, bufH, frameBuf_pixelDepth)
 
 print(gc.mem_free())
 #optional, for double-buffered frames
@@ -178,7 +179,10 @@ def homeRoutine():
     for i in range (1, (bufW*4)+10):
         uv_pixels[ i % num_uv_pixels ] = (255, 255, 255)
         uv_pixels[ (i-1) % num_uv_pixels ] = (0,0,0)
+        uv_pixels2[ i % num_uv_pixels ] = (255, 255, 255)
+        uv_pixels2[ (i-1) % num_uv_pixels ] = (0,0,0)
         uv_pixels.write()
+        uv_pixels2.write()
         #waitForSteps()
         requestMotion(stepsPerPixel/4, 1)
     requestMotion(stepsPerPixel*2, 0) #back off one step
@@ -224,34 +228,42 @@ def handleButtons(xPixel):
     if(okButtonPin.value()):
         for j in range(0, num_uv_pixels):
             uv_pixels[j] = (255, 255, 255)
+            uv_pixels2[j] = (255, 255, 255)
     if(backButtonPin.value()):
         for j in range(0, num_uv_pixels):
             uv_pixels[j] = (0, 0, 0)
+            uv_pixels2[j] = (255, 255, 255)
     if(upButtonPin.value()):
         for j in range(0, num_uv_pixels):
             uv_pixels[j] = (170, 170, 170)
+            uv_pixels2[j] = (255, 255, 255)
     if(downButtonPin.value()):
         for j in range(0, num_uv_pixels):
             uv_pixels[j] = (85, 85, 85)
+            uv_pixels2[j] = (255, 255, 255)
     if(specialModeGlobal == 1):
         for j in range(0, num_uv_pixels):
             x = int(255*(30*xPixel/bufW)%30)
             uv_pixels[j] = (x,x,x)
+            uv_pixels2[j] = (x,x,x)
     if(specialModeGlobal == 2):
         for j in range(0, num_uv_pixels):
             x = int(255*(30*xPixel+j/bufW)%30)
             uv_pixels[j] = (x,x,x)
+            uv_pixels2[j] = (x,x,x)
     if(isEraseCycle and (specialModeGlobal!=1 and specialModeGlobal!=2)):
         #print("erase cycle")
         for j in range(0, num_uv_pixels):
             uv_pixels[j] = (255, 255, 255)
+            uv_pixels2[j] = (255, 255, 255)
 
 def drawBufferForwards():
      global stepCounterForward
      for i in range (1, bufW-1):
-         setPixelColumn(pixels, colorW, colorH, i)
+         #setPixelColumn(pixels, colorW, colorH, i)
          #t0 = time.ticks_us()
-         setPixelColumn(uv_pixels, uvW, uvH, i)
+         setPixelColumn(uv_pixels, uvW, uvH, i+1)
+         setPixelColumn(uv_pixels2, uvW, uvH, i)
          #t1 = time.ticks_us()
          #print("x:")
          #print(i)
@@ -260,6 +272,7 @@ def drawBufferForwards():
          #pixels.show()
          handleButtons(i)
          uv_pixels.write()
+         uv_pixels2.write()
          #t3 = time.ticks_us()
          #waitForSteps()
          requestMotion(stepsPerPixel, 1) #spends ~25ms moving 50 steps
@@ -272,10 +285,12 @@ def drawBufferForwards():
 def drawBufferBackwards():
     global stepCounterReverse
     for i in range (bufW-1, 1, -1):
-         setPixelColumn(pixels, colorW, colorH, i)
-         setPixelColumn(uv_pixels, uvW, uvH, i)
+         #setPixelColumn(pixels, colorW, colorH, i)
+         setPixelColumn(uv_pixels, uvW, uvH, i+1)
+         setPixelColumn(uv_pixels2, uvW, uvH, i)
          handleButtons(i)
          uv_pixels.write()
+         uv_pixels2.write()
          #waitForSteps()
          requestMotion(stepsPerPixel, 0) #spends ~25ms moving 50 steps
 
@@ -334,6 +349,7 @@ def setNewMessage(minute):
         if (len(messageArray[messageIndex]) < 3):
             renderTime()
 
+#number of edges, center x, center y, radius, brightness
 def drawPolygon(n, cx, cy, radius, color):
     verts = array.array('h', [])
     for i in range(n):
