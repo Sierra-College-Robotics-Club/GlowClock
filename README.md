@@ -1,6 +1,6 @@
 # GlowClock
 
-This is a project from Sierra College Robotics Club, A glow-in-the-dark display, activated by UV LEDs scanning over a glow-in-the-dark surface
+This is a project from Sierra College Robotics Club, A glow-in-the-dark display, activated by UV LEDs scanning over a glow-in-the-dark surface. It displays messages, the time, and features various patterns and simple games! 
 
 See [The Schematic](GlowClockPCB/Docs/GlowClockSchematicPrint.pdf) and [The Code](code/glowClock.py) to get started working with it.
 
