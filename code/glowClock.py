@@ -16,10 +16,40 @@ from ds3231 import DS3231   #from https://github.com/picoscratch/micropython-DS3
 
 
 #CONNECTION LAYOUT:
-#LED_OUT_1: Color LEDs
-#LED_OUT_2: UV LEDs
-#LED_OUT_3: staggered UV LEDs
-#LED_OUT_4: Homing sensor
+#
+# Each LED_OUT port has 4 pins: GND, GPIO, +5V, +12V
+#   LED_OUT_1 - GPIO6: Color LEDs
+#   LED_OUT_2 - GPIO7: UV LEDs
+#   LED_OUT_3 - GPIO8: staggered UV LEDs
+#   LED_OUT_4 - GPIO9: Homing sensor
+#
+# ADC_OUT Pins
+#   GND
+#   GPIO28-ADC2: Unused
+#   GPIO27-ADC1: Unused
+#   GPIO26-ADC0: Unused
+#   3V3
+# I2C_LCD connector
+#
+#   GND
+#   3V3
+#   SCL/GPIO21   (shared with DS3231MZ RTC)
+#   SDA/GPIO22   (shared with DS3231MZ RTC)
+#
+# Pi Zero 40-pin Connector
+#   GPIO2 through GPIO5 are exposed via this header
+#   If Raspberry Pi SBC is not used, these pins can be used as GPIO
+#    if only UART or i2c communication to RasPi is used, unused pins can be unpopulated and used as GPIO
+#    Jumpers on underside of PCB configure whether these pins are configured as UART/I2C (default) or as SPI
+#
+# GPIO0 and GPIO1 go to on-board LEDs (active high)
+# Active-High pushbuttons are wired to GPIO10 through GPIO15
+#   GPIO10: BTN_UP
+#   GPIO11: BTN_OK
+#   GPIO12: BTN_DOWN
+#   GPIO13: BTN_RIGHT
+#   GPIO14: BTN_LEFT
+#   GPIO15: BTN_BACK
 
 
 #i2c pins:
