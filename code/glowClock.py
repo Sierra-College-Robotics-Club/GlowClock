@@ -12,7 +12,7 @@ import array
 
 from HAL import sdaPin, sclPin, i2c, ds, stepPin, dirPin, homeSensorPin
 from HAL import okButtonPin, backButtonPin, upButtonPin, downButtonPin, leftButtonPin, rightButtonPin
-from HAL import pixels, uv_pixels, uv_pixels2, num_pixels, num_uv_pixels, drawBufferForwards, drawBufferBackwards
+from HAL import pixels, uv_pixels, uv_pixels2, num_pixels, num_uv_pixels
 
 
 
@@ -95,6 +95,7 @@ messageArray = [
     ["Special Action", "CursedPolygons"],
     ["UV + Glow Paint", "=Glow Clock!"],
     ["Special Action", "Gradient2"],
+    ["Special Action", "Draw Square"],
 
 
 ]
@@ -244,6 +245,12 @@ def drawCursedPolygons():
     for i in range(0,35):
         drawPolygon(random.randint(0, 10), random.randint(1, bufW), random.randint(0, bufW), random.randint(0, bufH), random.randint(1, maxColor))
 
+def drawSquare():
+    clearDisplay()
+    renderText("Rhombus", 10, 5, maxColor)
+    drawPolygon(4, 50, 15, 10, maxColor)
+
+
 def activateGradient():
     global specialModeGlobal
     specialModeGlobal = 1
@@ -268,6 +275,8 @@ def setNewMessage(minute):
             specialModeGlobal = 1
         elif messageArray[messageIndex][1] == "Gradient2":
             specialModeGlobal = 2
+        elif messageArray[messageIndex][1] == "Draw Square":
+            drawSquare()
             
     else:
         for message in messageArray[messageIndex]:
@@ -308,6 +317,41 @@ def displayUpdate():
     setNewMessage(minute)
     fbuf.hline(0, 29, int(bufW/60*second), 255)
 
+
+def drawBufferForwards():
+     for i in range (1, bufW-1):
+         #setPixelColumn(pixels, colorW, colorH, i)
+         #t0 = time.ticks_us()
+         setPixelColumn(uv_pixels, uvW, uvH, i+1)
+         setPixelColumn(uv_pixels2, uvW, uvH, i)
+         #t1 = time.ticks_us()
+         #print("x:")
+         #print(i)
+         #print(uv_pixels)
+         #t2 = time.ticks_us()
+         #pixels.show()
+         handleButtons(i)
+         uv_pixels.write()
+         uv_pixels2.write()
+         #t3 = time.ticks_us()
+         #waitForSteps()
+         requestMotion(stepsPerPixel, 1) #spends ~25ms moving 50 steps
+         #t4 = time.ticks_us()
+         #profileTiming("setPixelColumn", t0, t1)
+         #profileTiming("debugPrints", t1, t2)
+         #profileTiming("uvpixels.show", t2, t3)
+         #profileTiming("motor steps", t3, t4)
+
+def drawBufferBackwards():
+    for i in range (bufW-1, 1, -1):
+         #setPixelColumn(pixels, colorW, colorH, i)
+         setPixelColumn(uv_pixels, uvW, uvH, i+1)
+         setPixelColumn(uv_pixels2, uvW, uvH, i)
+         handleButtons(i)
+         uv_pixels.write()
+         uv_pixels2.write()
+         #waitForSteps()
+         requestMotion(stepsPerPixel, 0) #spends ~25ms moving 50 steps
     
 def mainLoop():
     while(True):

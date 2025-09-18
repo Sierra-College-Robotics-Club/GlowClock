@@ -73,38 +73,3 @@ num_uv_pixels = 30
 pixels = neopixel.NeoPixel(Pin(6), num_pixels)
 uv_pixels = neopixel.NeoPixel(Pin(7), num_pixels)
 uv_pixels2 = neopixel.NeoPixel(Pin(8), num_pixels)
-
-def drawBufferForwards():
-     for i in range (1, bufW-1):
-         #setPixelColumn(pixels, colorW, colorH, i)
-         #t0 = time.ticks_us()
-         setPixelColumn(uv_pixels, uvW, uvH, i+1)
-         setPixelColumn(uv_pixels2, uvW, uvH, i)
-         #t1 = time.ticks_us()
-         #print("x:")
-         #print(i)
-         #print(uv_pixels)
-         #t2 = time.ticks_us()
-         #pixels.show()
-         handleButtons(i)
-         uv_pixels.write()
-         uv_pixels2.write()
-         #t3 = time.ticks_us()
-         #waitForSteps()
-         requestMotion(stepsPerPixel, 1) #spends ~25ms moving 50 steps
-         #t4 = time.ticks_us()
-         #profileTiming("setPixelColumn", t0, t1)
-         #profileTiming("debugPrints", t1, t2)
-         #profileTiming("uvpixels.show", t2, t3)
-         #profileTiming("motor steps", t3, t4)
-
-def drawBufferBackwards():
-    for i in range (bufW-1, 1, -1):
-         #setPixelColumn(pixels, colorW, colorH, i)
-         setPixelColumn(uv_pixels, uvW, uvH, i+1)
-         setPixelColumn(uv_pixels2, uvW, uvH, i)
-         handleButtons(i)
-         uv_pixels.write()
-         uv_pixels2.write()
-         #waitForSteps()
-         requestMotion(stepsPerPixel, 0) #spends ~25ms moving 50 steps
