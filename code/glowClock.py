@@ -12,7 +12,7 @@ import array
 
 from HAL import sdaPin, sclPin, i2c, ds, stepPin, dirPin, homeSensorPin
 from HAL import okButtonPin, backButtonPin, upButtonPin, downButtonPin, leftButtonPin, rightButtonPin
-from HAL import pixels, uv_pixels, uv_pixels2, num_pixels, num_uv_pixels
+from HAL import pixels, uv_pixels, uv_pixels2, num_pixels, num_uv_pixels, drawBufferForwards, drawBufferBackwards
 
 
 
@@ -220,42 +220,7 @@ def handleButtons(xPixel):
             uv_pixels[j] = (255, 255, 255)
             uv_pixels2[j] = (255, 255, 255)
 
-def drawBufferForwards():
-     global stepCounterForward
-     for i in range (1, bufW-1):
-         #setPixelColumn(pixels, colorW, colorH, i)
-         #t0 = time.ticks_us()
-         setPixelColumn(uv_pixels, uvW, uvH, i+1)
-         setPixelColumn(uv_pixels2, uvW, uvH, i)
-         #t1 = time.ticks_us()
-         #print("x:")
-         #print(i)
-         #print(uv_pixels)
-         #t2 = time.ticks_us()
-         #pixels.show()
-         handleButtons(i)
-         uv_pixels.write()
-         uv_pixels2.write()
-         #t3 = time.ticks_us()
-         #waitForSteps()
-         requestMotion(stepsPerPixel, 1) #spends ~25ms moving 50 steps
-         #t4 = time.ticks_us()
-         #profileTiming("setPixelColumn", t0, t1)
-         #profileTiming("debugPrints", t1, t2)
-         #profileTiming("uvpixels.show", t2, t3)
-         #profileTiming("motor steps", t3, t4)
 
-def drawBufferBackwards():
-    global stepCounterReverse
-    for i in range (bufW-1, 1, -1):
-         #setPixelColumn(pixels, colorW, colorH, i)
-         setPixelColumn(uv_pixels, uvW, uvH, i+1)
-         setPixelColumn(uv_pixels2, uvW, uvH, i)
-         handleButtons(i)
-         uv_pixels.write()
-         uv_pixels2.write()
-         #waitForSteps()
-         requestMotion(stepsPerPixel, 0) #spends ~25ms moving 50 steps
 
 def drawRandomDots():
     clearDisplay()

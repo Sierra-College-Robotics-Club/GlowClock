@@ -58,3 +58,10 @@ class DS_RTC_SIM:
             #todo handle saving of datetime
             return False
 ds = DS_RTC_SIM(None)
+
+
+def drawBufferForwards():
+    print("aaaaa")
+    
+def drawBufferBackwards():
+    print("bbbbb")
