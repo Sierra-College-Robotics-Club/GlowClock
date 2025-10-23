@@ -142,7 +142,7 @@ def setPixelColumn(pixelString, width, height, colX, step=1, start=0):
         pixelString[i] = (val, val, val)
 
 def setHDpixelColumn(pixelString1, pixelString2, width, height, baseColX):
-    setPixelColumn(uv_pixels, uvW, uvH, baseColX+2, 2,1)
+    setPixelColumn(uv_pixels, uvW, uvH+1, baseColX+2, 2,1)
     setPixelColumn(uv_pixels2, uvW, uvH, baseColX, 2,0)
 
 def homeRoutine():
@@ -322,39 +322,23 @@ def displayUpdate():
         specialModeGlobal = 0
         print("disabling erase cycle")
     setNewMessage(minute)
-    fbuf.hline(0, 29, int(bufW/60*second), 255)
+    fbuf.hline(0, 59, int(bufW/60*second), 255)
 
 
 def drawBufferForwards(hdModeActive = 0):
      for i in range (1, bufW-1):
-         #setPixelColumn(pixels, colorW, colorH, i)
-         #t0 = time.ticks_us()
          if(hdModeActive):
              setHDpixelColumn(uv_pixels, uv_pixels2, uvW, uvH, i)
          else:
              setPixelColumn(uv_pixels, uvW, uvH, i+1)
              setPixelColumn(uv_pixels2, uvW, uvH, i)
-         #t1 = time.ticks_us()
-         #print("x:")
-         #print(i)
-         #print(uv_pixels)
-         #t2 = time.ticks_us()
-         #pixels.show()
          handleButtons(i)
          uv_pixels.write()
          uv_pixels2.write()
-         #t3 = time.ticks_us()
-         #waitForSteps()
          requestMotion(stepsPerPixel, 1) #spends ~25ms moving 50 steps
-         #t4 = time.ticks_us()
-         #profileTiming("setPixelColumn", t0, t1)
-         #profileTiming("debugPrints", t1, t2)
-         #profileTiming("uvpixels.show", t2, t3)
-         #profileTiming("motor steps", t3, t4)
 
 def drawBufferBackwards(hdModeActive = 0):
     for i in range (bufW-1, 1, -1):
-         #setPixelColumn(pixels, colorW, colorH, i)
          if(hdModeActive):
              setHDpixelColumn(uv_pixels, uv_pixels2, uvW, uvH, i)
          else:
@@ -363,7 +347,6 @@ def drawBufferBackwards(hdModeActive = 0):
          handleButtons(i)
          uv_pixels.write()
          uv_pixels2.write()
-         #waitForSteps()
          requestMotion(stepsPerPixel, 0) #spends ~25ms moving 50 steps
     
 def mainLoop():
