@@ -77,12 +77,13 @@ print(gc.mem_free())
 messageArray = [
 
     ["Sierra College",  "Robotics Club!" ],
-    ["Welcome To",      "Open Sauce!"],
+#    ["Welcome To",      "Open Sauce!"],
+#    ["Welcome To",      "Maker Faire!"],
     ["Special Action", "Dots"],
     ["Please don't",    "Touch! I'm busy"],
     ["Hello World",     "This is a TEST" ],
     ["Special Action", "Game4"],
-    ["Howre you doing", "Because I'm a",     "Glow Clock!"],
+#    ["Howre you doing", "Because I'm a",     "Glow Clock!"],
     ["In your world",   "with human time"],
 
     ["ALL YOUR BASE",   "ARE BELONG TO US"],
@@ -90,7 +91,7 @@ messageArray = [
     ["Special Action", "Polygons"],
     ["follow us on",  "instagram", "@sierrabeepbop"],
     ["Special Action", "Gradient"],
-#    ["welcome to the",  "makerspace!"],
+    ["welcome to the",  "makerspace!"],
 #    ["Narnian time:",   "Synchronized"],
     ["Special Action", "CursedPolygons"],
     ["UV + Glow Paint", "=Glow Clock!"],
