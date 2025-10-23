@@ -60,10 +60,11 @@ gameTargetRow = 0
 
 isEraseCycle = False
 specialModeGlobal = 0
+hdRenderModeGlobal = 1
 
 print(gc.mem_free())
 #+4 prevents value error, TODO figure out cause of that (allocation slightly too small)
-fbuf = framebuf.FrameBuffer(bytearray(round((bufW+8)*(bufH)/4)), bufW+1, bufH, frameBuf_pixelDepth)
+fbuf = framebuf.FrameBuffer(bytearray(round((bufW+8)*(bufH)/4)), bufW+4, bufH, frameBuf_pixelDepth)
 
 print(gc.mem_free())
 #optional, for double-buffered frames
@@ -132,13 +133,17 @@ def profileTiming(label, start_ms, end_ms):
     elapsed_ms = time.ticks_diff(end_ms, start_ms) / 1000  # convert to microseconds
     print(f"{label}: {elapsed_ms:.1f} ms")
 
-def setPixelColumn(pixelString, width, height, colX, step=1):
+def setPixelColumn(pixelString, width, height, colX, step=1, start=0):
     scale = 255 / maxColor
-    for i, y in enumerate(range(0, height-step+1, step)):
+    for i, y in enumerate(range(start, height-step+1, step)):
         #print("x: ",colX,"  y:",y)
         pixelVal = fbuf.pixel(colX, y)
         val = int((pixelVal * scale)) # 255 - () for inverted mode
         pixelString[i] = (val, val, val)
+
+def setHDpixelColumn(pixelString1, pixelString2, width, height, baseColX):
+    setPixelColumn(uv_pixels, uvW, uvH, baseColX+2, 2,1)
+    setPixelColumn(uv_pixels2, uvW, uvH, baseColX, 2,0)
 
 def homeRoutine():
     for i in range (1, (bufW*4)+10):
@@ -303,6 +308,7 @@ def displayUpdate():
     global lastMinute
     global lastSecond
     global specialModeGlobal
+    global hdRenderModeGlobal
     global currentStage
     (year, month, day, weekday, hour, minute, second, zero) = ds.datetime()
     if (minute != lastMinute or second > (lastSecond+30)):
@@ -319,12 +325,15 @@ def displayUpdate():
     fbuf.hline(0, 29, int(bufW/60*second), 255)
 
 
-def drawBufferForwards():
+def drawBufferForwards(hdModeActive = 0):
      for i in range (1, bufW-1):
          #setPixelColumn(pixels, colorW, colorH, i)
          #t0 = time.ticks_us()
-         setPixelColumn(uv_pixels, uvW, uvH, i+1)
-         setPixelColumn(uv_pixels2, uvW, uvH, i)
+         if(hdModeActive):
+             setHDpixelColumn(uv_pixels, uv_pixels2, uvW, uvH, i)
+         else:
+             setPixelColumn(uv_pixels, uvW, uvH, i+1)
+             setPixelColumn(uv_pixels2, uvW, uvH, i)
          #t1 = time.ticks_us()
          #print("x:")
          #print(i)
@@ -343,11 +352,14 @@ def drawBufferForwards():
          #profileTiming("uvpixels.show", t2, t3)
          #profileTiming("motor steps", t3, t4)
 
-def drawBufferBackwards():
+def drawBufferBackwards(hdModeActive = 0):
     for i in range (bufW-1, 1, -1):
          #setPixelColumn(pixels, colorW, colorH, i)
-         setPixelColumn(uv_pixels, uvW, uvH, i+1)
-         setPixelColumn(uv_pixels2, uvW, uvH, i)
+         if(hdModeActive):
+             setHDpixelColumn(uv_pixels, uv_pixels2, uvW, uvH, i)
+         else:
+             setPixelColumn(uv_pixels, uvW, uvH, i+1)
+             setPixelColumn(uv_pixels2, uvW, uvH, i)
          handleButtons(i)
          uv_pixels.write()
          uv_pixels2.write()
@@ -360,11 +372,12 @@ def mainLoop():
         global stepCounterForward
         global stepCounterReverse
         global stepCounterHomeSkipped
+        global hdRenderModeGlobal
         #print("Free mem:", gc.mem_free())
         #render backwards first after homing
-        drawBufferBackwards()
+        drawBufferBackwards(hdRenderModeGlobal)
         displayUpdate()
-        drawBufferForwards()
+        drawBufferForwards(hdRenderModeGlobal)
         displayUpdate()
         #renderTime()
         print("Fwd:", stepCounterForward, "Back:", stepCounterReverse, "Skipped:", stepCounterHomeSkipped)
