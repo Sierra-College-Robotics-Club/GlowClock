@@ -1,7 +1,7 @@
 # GlowClock PCB
 This PCB was designed to, in addition to supporting the glowclock, be a modular prototyping board for various other projects as well, with all unused GPIO broken out and accessible.
 
-V1.0 boards have been produced and are in active use, V1.1 boards are current in development.
+V1.0 boards have been produced and are in active use, V1.1 boards are currently under development.
 
 ## Errata
 ### V1.0
