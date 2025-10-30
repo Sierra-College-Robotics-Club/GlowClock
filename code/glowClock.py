@@ -83,21 +83,24 @@ messageArray = [
     ["Special Action", "Dots"],
     ["Please don't",    "Touch! I'm busy"],
     ["Hello World",     "This is a TEST" ],
-    ["Special Action", "Game4"],
+    #["Special Action", "Game4"],
 #    ["Howre you doing", "Because I'm a",     "Glow Clock!"],
-    ["In your world",   "with human time"],
+    #["In your world",   "with human time"],
 
-    ["ALL YOUR BASE",   "ARE BELONG TO US"],
+    #["ALL YOUR BASE",   "ARE BELONG TO US"],
 
-    ["Special Action", "Polygons"],
-    ["follow us on",  "instagram", "@sierrabeepbop"],
-    ["Special Action", "Gradient"],
-    ["welcome to the",  "makerspace!"],
+   # ["Special Action", "Polygons"],
+    #["follow us on",  "instagram", "@sierrabeepbop"],
+#    ["Special Action", "Gradient"],
+    #["welcome to the",  "makerspace!"],
 #    ["Narnian time:",   "Synchronized"],
-    ["Special Action", "CursedPolygons"],
-    ["UV + Glow Paint", "=Glow Clock!"],
-    ["Special Action", "Gradient2"],
+   # ["Special Action", "CursedPolygons"],
+   # ["UV + Glow Paint", "=Glow Clock!"],
+#    ["Special Action", "Gradient2"],
     ["Special Action", "Draw Square"],
+    ["this is a long", "message, please","do not read it", "or you will know"],
+    ["I like shiny", "things. Do you?"]
+    
 
 
 ]
@@ -170,25 +173,25 @@ def fillDisplay(newColor):
 def renderLogo():
     fbuf.text("Sierra College",2,1,maxColor)
     fbuf.text("Robotics Club!",2,10,maxColor)
-    renderTime()
+    renderTime(19)
     #fbuf.text("Hi",2,18,maxColor)
     
 def renderText(text, x, y, color):
     fbuf.text(text, x, y, color)
 
-def renderTime():
+def renderTime(heightOffset):  #note 19 is good offset for 3rd row alignment
     (year, month, day, weekday, hour, minute, second, zero) = ds.datetime()
     print(f"it is {hour}:{minute}")
     #fbuf.fill(1)
     #erase the time field
     minuteSpacer = ""
-    fbuf.rect(0,19, bufW, 11, 0, True)
+    fbuf.rect(0,heightOffset, bufW, 11, 0, True)
     if hour > 12:
         hour = hour - 12
     if minute < 10:
         minuteSpacer="0"
-    fbuf.text(f"it is {hour}:{minuteSpacer}{minute}",2,20,maxColor)
-    drawPolygon((int(second/6)%10)+1, 110, 24,  7,  maxColor)
+    fbuf.text(f"it is {hour}:{minuteSpacer}{minute}",2,heightOffset+1,maxColor)
+    drawPolygon((int(second/6)%10)+1, 110, heightOffset+4,  7,  maxColor)
 
 
 #handle button presses and other real-time rendering
@@ -289,8 +292,13 @@ def setNewMessage(minute):
             renderText(message, 2, height, maxColor)
             height = height + 9
         #only write the time if there's room
-        if (len(messageArray[messageIndex]) < 3):
-            renderTime()
+        if (len(messageArray[messageIndex]) < 6):
+            print("rendering time at height:")
+            print(height)
+            renderTime(height)
+        else:
+            print("skipping render time for rowcount: ")
+            print(len(messageArray[messageIndex]))
 
 #number of edges, center x, center y, radius, brightness
 def drawPolygon(n, cx, cy, radius, color):
@@ -383,10 +391,13 @@ def main():
     global stepCounterForward
     global stepCounterReverse
     global stepCounterHomeSkipped
+    global currentStage
     waitForSteps()
     stepCounterForward = 0
     stepCounterReverse = 0
     stepCounterHomeSkipped = 0
+    (year, month, day, weekday, hour, minute, second, zero) = ds.datetime()
+    currentStage = minute % len(messageArray)
     mainLoop()
     
 def stepMotor(numsteps, direction):
