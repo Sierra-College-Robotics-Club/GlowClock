@@ -199,21 +199,26 @@ def handleButtons(xPixel):
     global isEraseCycle
     global specialModeGlobal
     if(okButtonPin.value()):
+        print("ok btn pushed")
         for j in range(0, num_uv_pixels):
             uv_pixels[j] = (255, 255, 255)
             uv_pixels2[j] = (255, 255, 255)
     if(backButtonPin.value()):
+        print("back btn pushed")
         for j in range(0, num_uv_pixels):
             uv_pixels[j] = (0, 0, 0)
-            uv_pixels2[j] = (255, 255, 255)
+            uv_pixels2[j] = (0, 0, 0)
     if(upButtonPin.value()):
-        for j in range(0, num_uv_pixels):
-            uv_pixels[j] = (170, 170, 170)
-            uv_pixels2[j] = (255, 255, 255)
+        print("up btn pushed")
+        print("bypassed")
+        #for j in range(0, num_uv_pixels):
+        #    uv_pixels[j] = (170, 170, 170)
+        #    uv_pixels2[j] = (255, 255, 255)
     if(downButtonPin.value()):
+        print("down btn pushed")
         for j in range(0, num_uv_pixels):
             uv_pixels[j] = (85, 85, 85)
-            uv_pixels2[j] = (255, 255, 255)
+            uv_pixels2[j] = (85, 85, 85)
     if(specialModeGlobal == 1):
         for j in range(0, num_uv_pixels):
             x = int(255*(30*xPixel/bufW)%30)
