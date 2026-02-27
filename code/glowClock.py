@@ -10,6 +10,7 @@ import random
 import math
 import array
 
+from HAL import HARDWARE
 from HAL import sdaPin, sclPin, i2c, ds, stepPin, dirPin, homeSensorPin
 from HAL import okButtonPin, backButtonPin, upButtonPin, downButtonPin, leftButtonPin, rightButtonPin
 from HAL import pixels, uv_pixels, uv_pixels2, num_pixels, num_uv_pixels
@@ -147,6 +148,14 @@ def setPixelColumn(pixelString, width, height, colX, step=1, start=0):
 def setHDpixelColumn(pixelString1, pixelString2, width, height, baseColX):
     setPixelColumn(uv_pixels, uvW, uvH+1, baseColX+2, 2,1)
     setPixelColumn(uv_pixels2, uvW, uvH, baseColX, 2,0)
+    
+def simPixelsWrite(frameBuf, column, height):
+    for i in range(0, height-1):
+        if(frameBuf.pixel(column, i)):
+            print("█", end="")
+        else:
+            print(" ", end="")
+    print("")
 
 def homeRoutine():
     for i in range (1, (bufW*4)+10):
@@ -209,8 +218,9 @@ def handleButtons(xPixel):
             uv_pixels[j] = (0, 0, 0)
             uv_pixels2[j] = (0, 0, 0)
     if(upButtonPin.value()):
-        print("up btn pushed")
-        print("bypassed")
+        #print("up btn pushed")
+        #print("bypassed")
+        pass
         #for j in range(0, num_uv_pixels):
         #    uv_pixels[j] = (170, 170, 170)
         #    uv_pixels2[j] = (255, 255, 255)
@@ -358,8 +368,11 @@ def drawBufferBackwards(hdModeActive = 0):
              setPixelColumn(uv_pixels, uvW, uvH, i+1)
              setPixelColumn(uv_pixels2, uvW, uvH, i)
          handleButtons(i)
-         uv_pixels.write()
-         uv_pixels2.write()
+         if(HARDWARE=="PICO"):
+             uv_pixels.write()
+             uv_pixels2.write()
+         else:
+             simPixelsWrite(fbuf, i, bufH)
          requestMotion(stepsPerPixel, 0) #spends ~25ms moving 50 steps
     
 def mainLoop():
