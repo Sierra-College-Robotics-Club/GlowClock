@@ -15,7 +15,7 @@ from HAL import sdaPin, sclPin, i2c, ds, stepPin, dirPin, homeSensorPin
 from HAL import okButtonPin, backButtonPin, upButtonPin, downButtonPin, leftButtonPin, rightButtonPin
 from HAL import pixels, uv_pixels, uv_pixels2, num_pixels, num_uv_pixels
 
-
+updateEverySeconds = 30
 
 microSecondsPerStep = 750
 
@@ -52,8 +52,7 @@ stepCounterForward = 0
 stepCounterHomeSkipped = 0
 stepCounterReverse = 0
 
-lastMinute = 0
-lastSecond = 0
+lastUpdateTotalSeconds = 0
 
 currentStage = 0
 
@@ -78,12 +77,12 @@ print(gc.mem_free())
     #"1234567890123456","1234567890123456" , "1234567890123456"
 messageArray = [
 
-    ["Sierra College",  "Robotics Club!" ],
-#    ["Welcome To",      "Open Sauce!"],
+#    ["Sierra College",  "Robotics Club!" ],
+    ["Hello", "San Francisco!", "Welcome To", "Open Sauce 2026!"],
 #    ["Welcome To",      "Maker Faire!"],
-    ["Special Action", "Dots"],
-    ["Please don't",    "Touch! I'm busy"],
-    ["Hello World",     "This is a TEST" ],
+#    ["Special Action", "Dots"],
+#    ["Please don't",    "Touch! I'm busy"],
+#    ["Hello World",     "This is a TEST" ],
     #["Special Action", "Game4"],
 #    ["Howre you doing", "Because I'm a",     "Glow Clock!"],
     #["In your world",   "with human time"],
@@ -96,11 +95,11 @@ messageArray = [
     #["welcome to the",  "makerspace!"],
 #    ["Narnian time:",   "Synchronized"],
    # ["Special Action", "CursedPolygons"],
-   # ["UV + Glow Paint", "=Glow Clock!"],
+     ["UV + Glow Paint", "=Glow Clock!"]
 #    ["Special Action", "Gradient2"],
-    ["Special Action", "Draw Square"],
-    ["this is a long", "message, please","do not read it", "or you will know"],
-    ["I like shiny", "things. Do you?"]
+#    ["Special Action", "Draw Square"],
+#    ["this is a long", "message, please","do not read it", "or you will know"],
+#    ["I like shiny", "things. Do you?"]
     
 
 
@@ -119,13 +118,13 @@ def scanI2C():
 def setRTCTime():
     now = ds.datetime()
     print(f"setting time from {now}")
-    year = 2025 # Can be yyyy or yy format
-    month = 5
-    mday = 9
-    hour = 12 # 24 hour format only
-    minute = 58
+    year = 2026 # Can be yyyy or yy format
+    month = 4
+    mday = 28
+    hour = 16 # 24 hour format only
+    minute = 17
     second = 0 # Optional
-    weekday = 6 # Optional
+    weekday = 3 # Optional, Sunday = 1
     datetime = (year, month, mday, hour, minute, second, weekday)
     ds.datetime(datetime)
     now = ds.datetime()
@@ -183,6 +182,8 @@ def renderLogo():
     fbuf.text("Sierra College",2,1,maxColor)
     fbuf.text("Robotics Club!",2,10,maxColor)
     renderTime(19)
+    renderDate(29)
+    renderWeekday(39)
     #fbuf.text("Hi",2,18,maxColor)
     
 def renderText(text, x, y, color):
@@ -202,6 +203,18 @@ def renderTime(heightOffset):  #note 19 is good offset for 3rd row alignment
     fbuf.text(f"it is {hour}:{minuteSpacer}{minute}",2,heightOffset+1,maxColor)
     drawPolygon((int(second/6)%10)+1, 110, heightOffset+4,  7,  maxColor)
 
+def renderDate(heightOffset):
+    (year, month, day, weekday, hour, minute, second, zero) = ds.datetime()
+    monthArr = ["NaM","Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
+    daySuffixArr = ["th","st", "nd", "rd", "th", "th", "th", "th", "th", "th", "th"]
+    print(f"on {monthArr[month]} {day}{daySuffixArr[day%10]}, {year}")
+    fbuf.text(f"{monthArr[month]} {day}{daySuffixArr[day%10]}, {year}",2,heightOffset+1,maxColor)
+
+def renderWeekday(heightOffset, length=10):
+    (year, month, day, weekday, hour, minute, second, zero) = ds.datetime()
+    dayArr = ["NaD","Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"]
+    print(f"happy {dayArr[weekday]}")
+    fbuf.text(f"happy {dayArr[weekday][0:length]}",2,heightOffset+1,maxColor)
 
 #handle button presses and other real-time rendering
 def handleButtons(xPixel):
@@ -311,6 +324,17 @@ def setNewMessage(minute):
             print("rendering time at height:")
             print(height)
             renderTime(height)
+            height = height + 9
+            if (len(messageArray[messageIndex]) < 5):
+                print("rendering date at height:")
+                print(height)
+                renderDate(height)
+                height = height + 9
+                if (len(messageArray[messageIndex]) < 4):
+                    print("rendering weekday at height:")
+                    print(height)
+                    renderWeekday(height)
+                    height = height + 9
         else:
             print("skipping render time for rowcount: ")
             print(len(messageArray[messageIndex]))
@@ -328,18 +352,18 @@ def drawPolygon(n, cx, cy, radius, color):
 
 def displayUpdate():
     global isEraseCycle
-    global lastMinute
-    global lastSecond
+    global lastUpdateTotalSeconds
     global specialModeGlobal
     global hdRenderModeGlobal
     global currentStage
     (year, month, day, weekday, hour, minute, second, zero) = ds.datetime()
-    if (minute != lastMinute or second > (lastSecond+30)):
+    currentTotalSeconds = ((hour * 60 + minute) * 60) + second
+    #if      updateEverySeconds elapsed                                     or     daily overflow
+    if ((lastUpdateTotalSeconds + updateEverySeconds < currentTotalSeconds) or lastUpdateTotalSeconds > currentTotalSeconds ):
         isEraseCycle = True
         print("new minute! Starting erase cycle")
         currentStage = (currentStage + 1) % len(messageArray)
-        lastMinute = minute
-        lastSecond = second
+        lastUpdateTotalSeconds = ((hour * 60 + minute) * 60) + second
     else:
         isEraseCycle = False
         specialModeGlobal = 0
@@ -401,10 +425,10 @@ def waitForSteps(threshold=0):
         time.sleep_us(50)  # small yield to avoid hogging the lock
         
 def main():
-    _thread.start_new_thread(stepperThread,())
-    homeRoutine()
     scanI2C()
     #setRTCTime()   #enable only when intially updating rtc
+    _thread.start_new_thread(stepperThread,())
+    homeRoutine()
     renderLogo()
     global stepCounterForward
     global stepCounterReverse
