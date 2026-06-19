@@ -5326,6 +5326,17 @@
 		)
 		(uuid "a0e4080f-1ca7-4fdc-88d2-0ad10584f013")
 	)
+	(text "V1.0 erroneously connected *\nGPIO22 instead of GPIO20 here,  \ncut this trace and  \ngreen-wire as needed  "
+		(exclude_from_sim no)
+		(at 191.77 80.01 0)
+		(effects
+			(font
+				(size 0.508 0.508)
+			)
+			(justify right)
+		)
+		(uuid "a250cc37-cc04-416a-83f2-ae17e973f5c7")
+	)
 	(text "2024-10-25"
 		(exclude_from_sim no)
 		(at 213.106 193.548 0)
@@ -5527,6 +5538,10 @@
 		(diameter 0)
 		(color 0 0 0 0)
 		(uuid "fa61d62f-acef-4aa6-bd15-64d4746e2214")
+	)
+	(no_connect
+		(at 191.77 77.47)
+		(uuid "56b86f2d-bea2-4d64-ad3a-f32349c41b94")
 	)
 	(wire
 		(pts

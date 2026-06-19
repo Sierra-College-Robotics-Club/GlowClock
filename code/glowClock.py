@@ -15,7 +15,7 @@ from HAL import sdaPin, sclPin, i2c, ds, stepPin, dirPin, homeSensorPin
 from HAL import okButtonPin, backButtonPin, upButtonPin, downButtonPin, leftButtonPin, rightButtonPin
 from HAL import pixels, uv_pixels, uv_pixels2, num_pixels, num_uv_pixels
 
-updateEverySeconds = 30
+updateEverySeconds = 60
 
 microSecondsPerStep = 750
 
@@ -83,7 +83,7 @@ messageArray = [
 #    ["Special Action", "Dots"],
 #    ["Please don't",    "Touch! I'm busy"],
 #    ["Hello World",     "This is a TEST" ],
-    #["Special Action", "Game4"],
+     ["Special Action", "Game4"],
 #    ["Howre you doing", "Because I'm a",     "Glow Clock!"],
     #["In your world",   "with human time"],
 
