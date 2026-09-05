@@ -5281,6 +5281,26 @@
 		)
 		(uuid "0d2d30f7-2add-4486-9063-91fc1843d9a3")
 	)
+	(text "SCL"
+		(exclude_from_sim no)
+		(at 204.47 112.522 0)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+		)
+		(uuid "24341d36-602c-4997-b7de-02134ec1c026")
+	)
+	(text "SDA"
+		(exclude_from_sim no)
+		(at 204.47 115.062 0)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+		)
+		(uuid "2ec57f66-18d0-44ef-9c68-026040fae3b0")
+	)
 	(text "Glow Clock"
 		(exclude_from_sim no)
 		(at 197.612 189.738 0)

@@ -15,6 +15,8 @@ from HAL import sdaPin, sclPin, i2c, ds, stepPin, dirPin, homeSensorPin
 from HAL import okButtonPin, backButtonPin, upButtonPin, downButtonPin, leftButtonPin, rightButtonPin
 from HAL import pixels, uv_pixels, uv_pixels2, num_pixels, num_uv_pixels
 
+from image import img
+
 updateEverySeconds = 60
 
 microSecondsPerStep = 750
@@ -77,25 +79,27 @@ print(gc.mem_free())
     #"1234567890123456","1234567890123456" , "1234567890123456"
 messageArray = [
 
-#    ["Sierra College",  "Robotics Club!" ],
-    ["Hello", "San Francisco!", "Welcome To", "Open Sauce 2026!"],
+     ["Sierra College",  "Robotics Club!" ],
+#    ["Hello", "San Francisco!", "Welcome To", "Open Sauce 2026!"],
 #    ["Welcome To",      "Maker Faire!"],
 #    ["Special Action", "Dots"],
-#    ["Please don't",    "Touch! I'm busy"],
+     ["Please don't",    "Touch! I'm busy"],
 #    ["Hello World",     "This is a TEST" ],
-     ["Special Action", "Game4"],
+#     ["Special Action", "Game4"],
 #    ["Howre you doing", "Because I'm a",     "Glow Clock!"],
     #["In your world",   "with human time"],
 
     #["ALL YOUR BASE",   "ARE BELONG TO US"],
 
-   # ["Special Action", "Polygons"],
+   #  ["Special Action", "Polygons"],
     #["follow us on",  "instagram", "@sierrabeepbop"],
 #    ["Special Action", "Gradient"],
     #["welcome to the",  "makerspace!"],
 #    ["Narnian time:",   "Synchronized"],
-   # ["Special Action", "CursedPolygons"],
-     ["UV + Glow Paint", "=Glow Clock!"]
+     ["UV + Glow Paint", "=Glow Clock!"],
+    # ["Special Action", "CursedPolygons"],
+     ["Special Action", "Image"],
+     #["Special Action", "Image", "smile.py"], #WIP implementation
 #    ["Special Action", "Gradient2"],
 #    ["Special Action", "Draw Square"],
 #    ["this is a long", "message, please","do not read it", "or you will know"],
@@ -104,6 +108,7 @@ messageArray = [
 
 
 ]
+
 
 def scanI2C():
     devices = i2c.scan()
@@ -287,6 +292,16 @@ def drawSquare():
     renderText("Rhombus", 10, 5, maxColor)
     drawPolygon(4, 50, 15, 10, maxColor)
 
+def drawImage():
+    r = 0
+    c = 0
+    for row in img:
+        c = 0
+        for pixel in row:
+            fbuf.pixel(c,r,pixel)
+            c += 1
+        r += 1
+
 
 def activateGradient():
     global specialModeGlobal
@@ -314,6 +329,11 @@ def setNewMessage(minute):
             specialModeGlobal = 2
         elif messageArray[messageIndex][1] == "Draw Square":
             drawSquare()
+        elif messageArray[messageIndex][1] == "Image":
+            #if(len(messageArray[messageIndex]) > 1):   #WIP, to allow drawing additional images
+            #    drawImage(messageArray[messageIndex][2])
+            #else:
+            drawImage()
             
     else:
         for message in messageArray[messageIndex]:
