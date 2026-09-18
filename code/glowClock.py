@@ -45,6 +45,8 @@ pixelDepth = 2;
 frameBuf_pixelDepth = framebuf.GS2_HMSB
 maxColor = (2**pixelDepth)-1; #2 bits per pixel, values 0-3
 
+pixelColorMap = [0, 20, 90, 255]
+
 # Shared variables for multithreading
 steps_needed = 0
 step_direction = 0
@@ -79,11 +81,11 @@ print(gc.mem_free())
     #"1234567890123456","1234567890123456" , "1234567890123456"
 messageArray = [
 
-     ["Sierra College",  "Robotics Club!" ],
+   #  ["Sierra College",  "Robotics Club!" ],
 #    ["Hello", "San Francisco!", "Welcome To", "Open Sauce 2026!"],
 #    ["Welcome To",      "Maker Faire!"],
 #    ["Special Action", "Dots"],
-     ["Please don't",    "Touch! I'm busy"],
+  #   ["Please don't",    "Touch! I'm busy"],
 #    ["Hello World",     "This is a TEST" ],
 #     ["Special Action", "Game4"],
 #    ["Howre you doing", "Because I'm a",     "Glow Clock!"],
@@ -96,7 +98,7 @@ messageArray = [
 #    ["Special Action", "Gradient"],
     #["welcome to the",  "makerspace!"],
 #    ["Narnian time:",   "Synchronized"],
-     ["UV + Glow Paint", "=Glow Clock!"],
+ #    ["UV + Glow Paint", "=Glow Clock!"],
     # ["Special Action", "CursedPolygons"],
      ["Special Action", "Image"],
      #["Special Action", "Image", "smile.py"], #WIP implementation
@@ -142,11 +144,12 @@ def profileTiming(label, start_ms, end_ms):
     print(f"{label}: {elapsed_ms:.1f} ms")
 
 def setPixelColumn(pixelString, width, height, colX, step=1, start=0):
-    scale = 255 / maxColor
+    
+    #scale = 255 / maxColor
     for i, y in enumerate(range(start, height-step+1, step)):
         #print("x: ",colX,"  y:",y)
         pixelVal = fbuf.pixel(colX, y)
-        val = int((pixelVal * scale)) # 255 - () for inverted mode
+        val = pixelColorMap[pixelVal] # 255 - () for inverted mode
         pixelString[i] = (val, val, val)
 
 def setHDpixelColumn(pixelString1, pixelString2, width, height, baseColX):
